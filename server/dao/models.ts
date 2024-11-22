@@ -1,4 +1,5 @@
 import { Model, InferAttributes, InferCreationAttributes, Sequelize, DataTypes, CreationOptional } from 'sequelize';
+import pg from "pg";
 
 const PG_USER = process.env.PG_USER
 const PG_PASSWORD = process.env.PG_PASSWORD
