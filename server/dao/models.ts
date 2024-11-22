@@ -1,16 +1,29 @@
 import { Model, InferAttributes, InferCreationAttributes, Sequelize, DataTypes, CreationOptional } from 'sequelize';
 
-const sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: 'database.db'
-});
+const PG_USER = process.env.PG_USER
+const PG_PASSWORD = process.env.PG_PASSWORD
+const PG_HOST = process.env.PG_HOST
+const PG_DATABASE = process.env.PG_DATABASE
+const PG_TEST_ENV_VAR = process.env.PG_TEST_ENV_VAR
 
-// try {
-//     await sequelize.authenticate();
-//     console.log('Connection has been established successfully.');
-// } catch (error) {
-//     console.error('Unable to connect to the database:', error);
-// }
+if (!PG_USER || !PG_PASSWORD || !PG_HOST || !PG_DATABASE) {
+    throw new Error('Environment variables PG_USER, PG_PASSWORD, PG_HOST, and PG_DATABASE must be set')
+} else {
+    console.log('Environment variables set.')
+    console.log('PG_TEST_ENV_VAR:', PG_TEST_ENV_VAR)
+}
+
+const sequelize = new Sequelize(`postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}/${PG_DATABASE}?sslmode=require`)
+
+const tryConnection = async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('Connection has been established successfully.');
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+}}
+
+tryConnection();
 
 interface Recipe extends Model<InferAttributes<Recipe>, InferCreationAttributes<Recipe>> {
     id: CreationOptional<number>;
@@ -87,8 +100,8 @@ const RecipeIngredient = sequelize.define<RecipeIngredient>(
     },
 );
 
-Recipe.hasMany(RecipeIngredient)
-Ingredient.hasMany(RecipeIngredient)
+Recipe.hasMany(RecipeIngredient, { foreignKey: 'recipeId' });
+Ingredient.hasMany(RecipeIngredient, { foreignKey: 'ingredientId' });
 RecipeIngredient.belongsTo(Recipe, { foreignKey: 'recipeId' });
 RecipeIngredient.belongsTo(Ingredient, { foreignKey: 'ingredientId' });
 
@@ -179,18 +192,18 @@ const MealplanIngredient = sequelize.define<MealplanIngredient>(
     },
 );
 
-Mealplan.hasMany(MealplanRecipe);
+Mealplan.hasMany(MealplanRecipe, { foreignKey: 'mealplanId' });
 MealplanRecipe.belongsTo(Mealplan, { foreignKey: 'mealplanId' });
 
-Recipe.hasMany(MealplanRecipe);
+Recipe.hasMany(MealplanRecipe, { foreignKey: 'recipeId' });
 MealplanRecipe.belongsTo(Recipe, { foreignKey: 'recipeId' });
 
-Mealplan.hasMany(MealplanIngredient);
+Mealplan.hasMany(MealplanIngredient, { foreignKey: 'mealplanId' });
 MealplanIngredient.belongsTo(Mealplan, { foreignKey: 'mealplanId' });
 
-Ingredient.hasMany(MealplanIngredient);
+Ingredient.hasMany(MealplanIngredient, { foreignKey: 'ingredientId' });
 MealplanIngredient.belongsTo(Ingredient, { foreignKey: 'ingredientId' });
 
-// sequelize.sync({ force: true });
+sequelize.sync();
 
 export { sequelize, Recipe, Ingredient, RecipeIngredient, Mealplan, MealplanRecipe, MealplanIngredient };
