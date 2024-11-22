@@ -23,14 +23,11 @@ export default defineEventHandler(async (event) => {
       await MealplanIngredient.destroy({ where: { mealplanId: mealplan.id } });
     }
     // create recipes
-    console.log(recipes)
-    console.log(ingredients)
     for (const recipeId of recipes) {
       await MealplanRecipe.create({ recipeId: recipeId, mealplanId: mealplan.id }, { transaction: t });
     }
     // create ingredients
     for (const ingredientId of ingredients) {
-      console.log('ingredientId:', ingredientId);
       await MealplanIngredient.create({ ingredientId: ingredientId, mealplanId: mealplan.id }, { transaction: t });
     }
     await t.commit();

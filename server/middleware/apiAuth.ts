@@ -19,8 +19,6 @@ export default defineEventHandler((event) => {
       token = useCreds().getTokenFromCookieString(cookieHeader);
     }
 
-    console.log("token", token);
-
     if (!token) {
       throw createError({ statusCode: 401, message: 'Unauthorized' });
     } else if (!useCreds().checkCreds(token)) {

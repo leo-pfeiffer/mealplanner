@@ -499,7 +499,7 @@ const createMealPlan = async () => {
     setMessageWithTimer(mealplanMessage, 'Mealplan saved!');
     refresh_mealplans();
   } else {
-    console.log('Could not save mealplan 😢');
+    console.log('Could not save mealplan.');
   }
 }
 
@@ -519,7 +519,6 @@ const setMessageWithTimer = (field, msg, ms=6000) => {
 }
 
 const updateIngredientName = async (ingredientId, e) => {
-  console.log(e.target)
   const newName = stripAndUseStandardCapitalization(e.target.value);
   if (!newName || newName == ''){
     return

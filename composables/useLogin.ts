@@ -31,10 +31,8 @@ export const useLogin = () => {
 
     const checkAuthToken = async (token: string) => {
         if (!token) {
-            console.log("1No token. Not authenticated.");
             return false;
         }
-        console.log("Checking token", token);
         const config = useRuntimeConfig();
         const success = await fetch(`${config.public.appURL}/auth`, {
             method: 'GET', 
@@ -43,9 +41,7 @@ export const useLogin = () => {
                 'Authorization': `Bearer ${token}`
             }
         }).then(res => {
-            console.log("res:", res);
             if (res.status !== 200) {
-                console.log("Login failed", res.status);
                 return false;
             }
             return true;
@@ -54,7 +50,8 @@ export const useLogin = () => {
     }
 
     const logout = () => {
-        // useToken().deleteTokenCookie();
+        useToken().deleteTokenCookie();
+        navigateTo('/login');
     }
 
     return { login, checkAuthToken, logout }

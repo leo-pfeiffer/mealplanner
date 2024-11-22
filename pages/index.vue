@@ -511,7 +511,6 @@
       res => res.json()
     ).then(
       data => {
-        console.log("data", data);
         if (data.status === 200) {
           console.log('Mealplan saved!');
           mealplanIsSaved.value = true;
@@ -541,7 +540,6 @@
   }
   
   const updateIngredientName = async (ingredientId, e) => {
-    console.log(e.target)
     const newName = stripAndUseStandardCapitalization(e.target.value);
     if (!newName || newName == ''){
       return
@@ -739,7 +737,6 @@
         setMessageWithTimer(mealplanMessage, 'Could not send mealplan as email');
       }
     });
-    console.log(resp);
   }
   
   </script>

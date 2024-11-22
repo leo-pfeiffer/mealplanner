@@ -27,7 +27,6 @@ export default defineEventHandler(async (event) => {
     if (!token) {
       throw createError({statusCode: 401, statusMessage: 'Unauthorized'});
     }
-    console.log("token", token);
     const config = useRuntimeConfig();
     const mealplan = await fetch(
       `${config.public.appURL}/api/mealplan?id=${query.mealplanId}`,
@@ -39,11 +38,9 @@ export default defineEventHandler(async (event) => {
         }
     }
     ).then(res => {
-        console.log("Hello from here", res.status)
         return res.json()
       });
     if (!mealplan) {
-      console.log("mealplan not found");
       throw createError({
         statusCode: 400,
         statusMessage: 'No mealplan found for mealplanId not found',
