@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@types/sequelize": "^4.28.20",
+    "crypto": "^1.0.1",
     "express": "^4.21.1",
     "nuxt": "^3.14.159",
     "pg": "^8.13.1",

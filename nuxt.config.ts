@@ -9,4 +9,11 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
+  runtimeConfig: {
+    public: {
+        appUser: process.env.APP_USER,
+        appPassword: process.env.APP_PASSWORD,
+        appURL: process.env.APP_URL,
+    }
+  },
 })
