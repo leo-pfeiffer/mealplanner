@@ -16,7 +16,7 @@
               <button @click="loadExistingMealplan" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                 Load meal plan
               </button>
-              <select class="ml-2 py-1 px-4 border border-amber-500 rounded" v-model="loadedMealplanId">
+              <select class="ml-2 py-1 px-4 border border-amber-500 rounded" v-model="currentMealplanId">
                 <option disabled selected value> -- select meal plan -- </option>
                 <option v-for="mealplan in mealplans" :key="mealplan.id" :value="mealplan.id" default="Fsa">{{ mealplan.name }}</option>
               </select>
@@ -173,8 +173,13 @@
                 <p v-else class="ml-4 text-amber-700">Select additional ingredients on the left!</p>
               </div>
               
-              <button @click="createMealPlan" class="mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+              <button 
+              @click="createMealPlan" :disabled="mealplanIsSaved" :class="mealplanIsSaved ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'" class="mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                 Save meal plan
+              </button>
+              <button 
+              @click="sendAsEmail" :disabled="!mealplanIsSaved" :class="!mealplanIsSaved ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+              ✉️ Send as e-mail
               </button>
   
               <div class="mt-4" v-if="mealplanMessage != ''">
@@ -310,9 +315,10 @@
   const mealplanIngredients = ref([]);
   const mealplanRecipes = ref([]);
   const loadedMealplan = ref({});
-  const loadedMealplanId = ref('');
+  const currentMealplanId = ref('');
   const hasLoadedMealplan = ref(false);
   const mealplanMessage = ref('');
+  const mealplanIsSaved = ref(false);
   
   const isRecipeModalVisible = ref(false);
   const isManagmentModalVisible = ref(false);
@@ -353,6 +359,7 @@
   const addToMealplan = () => {
     mealplanIngredients.value = [...selectedIngredients.value];
     mealplanRecipes.value = [...selectedRecipes.value];
+    mealplanIsSaved.value = false;
   }
   
   const addNewRecipeIngredientToNewRecipe = () => {
@@ -414,10 +421,10 @@
   }
   
   const loadExistingMealplan = () => {
-    if (!loadedMealplanId.value) {
+    if (!currentMealplanId.value) {
       return;
     }
-    loadedMealplan.value = mealplans.value.find(m => m.id == loadedMealplanId.value);
+    loadedMealplan.value = mealplans.value.find(m => m.id == currentMealplanId.value);
     newMealplanNameInput.value = '';
     hasLoadedMealplan.value = true;
   
@@ -445,6 +452,8 @@
       }
     }
     selectedIngredients.value = [...newSelectedIngredients];
+
+    mealplanIsSaved.value = true;
   }
   
   const resetApp = () => {
@@ -463,8 +472,10 @@
     newMealplanNameInput.value = '';
     hasLoadedMealplan.value = false;
     loadedMealplan.value = {};
+    currentMealplanId.value = '';
     mealplanRecipes.value = [];
     mealplanIngredients.value = [];
+    mealplanIsSaved.value = false;
   
     console.log('Creating new mealplan');
   }
@@ -495,15 +506,23 @@
       .flatMap(ri => ri.map(r => r.recipeId))
       .reduce((acc, cur) => acc.includes(cur) ? acc : [...acc, cur], []);
     
-    const response = await createMealplanApi(newMealplanName.value, ingredients, recipes);
-  
-    if (response.ok) {
-      console.log('Mealplan saved!');
-      setMessageWithTimer(mealplanMessage, 'Mealplan saved!');
-      refresh_mealplans();
-    } else {
-      console.log('Could not save mealplan 😢');
-    }
+    await createMealplanApi(newMealplanName.value, ingredients, recipes)
+    .then(
+      res => res.json()
+    ).then(
+      data => {
+        console.log("data", data);
+        if (data.status === 200) {
+          console.log('Mealplan saved!');
+          mealplanIsSaved.value = true;
+          currentMealplanId.value = data.body.mealplanId;
+          setMessageWithTimer(mealplanMessage, 'Mealplan saved!');
+          refresh_mealplans();
+        } else {
+          console.log('Could not save mealplan.');    
+        }
+      }
+    )
   }
   
   const checkRecipeNameConflict = () => {
@@ -694,9 +713,33 @@
     if (resp.ok) {
       refresh_mealplans();
     } else {
-      // todo
       console.log('Could not delete mealplan');
     }
+  }
+
+  const sendAsEmail = async () => {
+    if (!currentMealplanId.value) {
+      console.log('No mealplan saved or loaded.');
+      return;
+    }
+    console.log('Sending mealplan as email:', currentMealplanId.value);
+    const resp = await fetch(`/api/internal/email?mealplanId=${currentMealplanId.value}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 200) {
+        console.log('Mealplan sent as email');
+        setMessageWithTimer(mealplanMessage, 'Mealplan sent as email!');
+      } else {
+        console.log('Could not send mealplan as email');
+        setMessageWithTimer(mealplanMessage, 'Could not send mealplan as email');
+      }
+    });
+    console.log(resp);
   }
   
   </script>

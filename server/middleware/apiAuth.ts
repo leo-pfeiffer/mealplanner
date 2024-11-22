@@ -13,19 +13,10 @@ export default defineEventHandler((event) => {
 
     // use auth header first if present
     if (authHeaders) {
-      console.log("reading header");
-        const authType = authHeaders.split(' ')[0];
-        if (authType === 'Bearer') {
-          token = authHeaders.split(' ')[1];
-        } else {
-          throw createError({ statusCode: 401, message: 'Unauthorized' });
-        }
+      token = useCreds().getTokenFromHeaderString(authHeaders);
     }
-    // else use cookie 
     else if (cookieHeader) {
-      console.log("reading cookie");
-        token = cookieHeader?.split(" ")
-          .find((c) => c.startsWith("mealPlannerAuthToken="))?.split("=")[1];
+      token = useCreds().getTokenFromCookieString(cookieHeader);
     }
 
     console.log("token", token);
@@ -34,6 +25,6 @@ export default defineEventHandler((event) => {
       throw createError({ statusCode: 401, message: 'Unauthorized' });
     } else if (!useCreds().checkCreds(token)) {
       throw createError({ statusCode: 401, message: 'Unauthorized' });
-    }    
+    }
   })
   

@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 export const useCreds = () => {
 
     const toSha256 = (base64string: string): string => {
-    return createHash('sha256').update(base64string).digest('hex');
+        return createHash('sha256').update(base64string).digest('hex');
     }
 
     const getLoginCreds = () => {
@@ -26,5 +26,19 @@ export const useCreds = () => {
         return LOGIN_CREDS;
     }
 
-    return { checkCreds, getCreds }
+    const getTokenFromHeaderString = (authHeader: string) => {
+        const authType = authHeader.split(' ')[0];
+        if (authType === 'Bearer') {
+            return authHeader.split(' ')[1];
+        } else {
+            return null;
+        }
+    }
+
+    const getTokenFromCookieString = (cookieHeader: string) => {
+        return cookieHeader?.split(" ")
+            .find((c) => c.startsWith("mealPlannerAuthToken="))?.split("=")[1];
+    }
+
+    return { checkCreds, getCreds, getTokenFromHeaderString, getTokenFromCookieString }
 }

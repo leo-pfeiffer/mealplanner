@@ -35,7 +35,11 @@ export default defineEventHandler(async (event) => {
     }
     await t.commit();
     return {
-      status: 200
+      status: 200,
+      body: {
+        message: 'Mealplan created successfully',
+        mealplanId: mealplan.id,
+      }
     }
   } catch (error) {
     await t.rollback();
