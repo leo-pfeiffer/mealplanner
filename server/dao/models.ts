@@ -13,7 +13,12 @@ if (!PG_USER || !PG_PASSWORD || !PG_HOST || !PG_DATABASE) {
     console.log('PG_TEST_ENV_VAR:', PG_TEST_ENV_VAR)
 }
 
-const sequelize = new Sequelize(`postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}/${PG_DATABASE}?sslmode=require`)
+const sequelize = new Sequelize(
+    `postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}/${PG_DATABASE}?sslmode=require`,
+    {
+        dialectModule: require('pg')
+    }
+)
 
 const tryConnection = async () => {
     try {
