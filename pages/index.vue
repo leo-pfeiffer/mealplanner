@@ -348,7 +348,6 @@
   const manageIngredientStatus = ref('');
 
   const canEditRecipe = () => {
-    console.log('canEditRecipe', selectedRecipes.value);
     return selectedRecipes.value.length == 1;
   }
   
@@ -371,7 +370,6 @@
   const openEditRecipeModal = () => {
     isRecipeEditModalVisible.value = true;
     const selected = getSingleSelectedRecipe();
-    console.log(selected)
     editRecipeId.value = selected.id;
     editRecipeOriginalName.value = selected.name;
     editRecipeName.value = selected.name;
@@ -394,7 +392,6 @@
   }
 
   const removeIngredientFromEditRecipe = (ingredient) => {
-    console.log('Removing ingredient', ingredient);
     editRecipeIngredients.value = editRecipeIngredients.value.filter(ing => ing != ingredient);
   }
 
@@ -432,8 +429,6 @@
       body.fieldsToUpdate = ['name', 'note', 'ingredients'];
     }
 
-    console.log("createRecipeApi", body);
-
     return fetch('/api/recipe', {
       method: 'POST',
       headers: {
@@ -445,7 +440,6 @@
 
   const saveEditedRecipe = async () => {
     if (!editRecipeName.value || editRecipeIngredients.value.length == 0) {
-      console.log('Recipe name or ingredients missing');
       setMessageWithTimer(modalMessage, 'Recipe name or ingredients missing');
       return;
     }
@@ -461,7 +455,6 @@
       refresh_recipes();
       refresh_ingredients();
       selectedRecipes.value = [];
-      console.log("Selected recipes", selectedRecipes.value);
     } else {
       setMessageWithTimer(modalMessage, 'Could not save recipe');
     }
@@ -542,8 +535,6 @@
     mealplanRecipes.value = [];
     mealplanIngredients.value = [];
     mealplanIsSaved.value = false;
-  
-    console.log('Creating new mealplan');
   }
   
   const createMealplanApi = async (name, ingredients, recipes) => {
@@ -558,12 +549,10 @@
   
   const createMealPlan = async () => {
     if (!newMealplanName.value) {
-      console.log('Mealplan name or recipes missing');
       setMessageWithTimer(mealplanMessage, 'Mealplan name missing');
       return;
     }
     if (mealplanRecipes.value.length == 0 && mealplanIngredients.value.length == 0) {
-      console.log('Pleace select either recipes or ingredients');
       setMessageWithTimer(mealplanMessage, 'Please select either recipes or ingredients');
       return;
     }
@@ -578,13 +567,12 @@
     ).then(
       data => {
         if (data.status === 200) {
-          console.log('Mealplan saved!');
           mealplanIsSaved.value = true;
           currentMealplanId.value = data.body.mealplanId;
           setMessageWithTimer(mealplanMessage, 'Mealplan saved!');
           refresh_mealplans();
         } else {
-          console.log('Could not save mealplan.');    
+          setMessageWithTimer(mealplanMessage, 'Could not save mealplan!');
         }
       }
     )
@@ -624,7 +612,6 @@
       setMessageWithTimer(manageIngredientStatus, '✅', 1000);
     } else {
       setMessageWithTimer(manageIngredientStatus, '⚠️', 2000);
-      console.log('Could not update ingredient name');
     }
   }
   
@@ -652,7 +639,6 @@
       setMessageWithTimer(manageRecipeStatus, '✅', 1000);
     } else {
       setMessageWithTimer(manageRecipeStatus, '⚠️', 2000);
-      console.log('Could not update recipe name');
     }
   }
   
@@ -674,7 +660,6 @@
       setMessageWithTimer(manageMealPlanStatus, '✅', 1000);
     } else {
       setMessageWithTimer(manageMealPlanStatus, '⚠️', 2000);
-      console.log('Could not update mealplan name');
     }
   }
   
