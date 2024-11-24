@@ -47,6 +47,11 @@
                 <button @click="isRecipeModalVisible = true" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                   Create recipe
                 </button>
+
+                <!-- Button to open the modal -->
+                <button v-if="canEditRecipe()" @click="isRecipeEditModalVisible = true" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                  Edit
+                </button>
   
                 <!-- Modal component -->
                 <Modal :show="isRecipeModalVisible" @close="isRecipeModalVisible = false">
@@ -320,6 +325,7 @@
   const mealplanMessage = ref('');
   const mealplanIsSaved = ref(false);
   
+  const isRecipeEditModalVisible = ref(false);
   const isRecipeModalVisible = ref(false);
   const isManagmentModalVisible = ref(false);
   
@@ -329,6 +335,11 @@
   const manageMealPlanStatus = ref('');
   const manageRecipeStatus = ref('');
   const manageIngredientStatus = ref('');
+
+  const canEditRecipe = () => {
+    console.log('canEditRecipe', selectedRecipes.value);
+    return selectedRecipes.value.length == 1;
+  }
   
   const isRecipeDeletable = (recipeId) => {
     // todo fix
@@ -340,6 +351,10 @@
     const recipe_ingredient = recipes.value.some(r => r.recipe_ingredients.some(i => i.ingredient.id == ingredientId));
     const mealplan_ingredient = mealplans.value.some(m => m.mealplan_ingredients.some(i => i.ingredient.id == ingredientId));
     return !recipe_ingredient && !mealplan_ingredient;
+  }
+
+  const getSingleSelectedRecipe = () => {
+    return selectedRecipes.value.length == 1 ? selectedRecipes.value[0] : null;
   }
   
   const stripAndUseStandardCapitalization = (string) => {
@@ -380,7 +395,13 @@
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ name: recipeName, ingredients: ingredients })
+      body: JSON.stringify(
+        { 
+          name: recipeName, 
+          ingredients: ingredients,
+          // note: ''  // todo
+        }
+      )
     })
   }
   

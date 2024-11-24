@@ -34,6 +34,7 @@ tryConnection();
 interface Recipe extends Model<InferAttributes<Recipe>, InferCreationAttributes<Recipe>> {
     id: CreationOptional<number>;
     name: string;
+    note: string;
   }
 
 const Recipe = sequelize.define<Recipe>(
@@ -49,6 +50,10 @@ const Recipe = sequelize.define<Recipe>(
             allowNull: false,
             unique: true,
         },
+        note: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        }
     },
 )
 
