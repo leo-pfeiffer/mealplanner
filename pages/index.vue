@@ -44,58 +44,14 @@
               <p class="m-1 text-xl">Recipes</p>
               <div class="inline-flex items-center">
                 <!-- Button to open the modal -->
-                <button @click="isRecipeModalVisible = true" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                <button @click="openCreateRecipeModal()" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                   Create recipe
                 </button>
 
                 <!-- Button to open the modal -->
-                <button v-if="canEditRecipe()" @click="isRecipeEditModalVisible = true" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                <button v-if="canEditRecipe()" @click="openEditRecipeModal" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                   Edit
                 </button>
-  
-                <!-- Modal component -->
-                <Modal :show="isRecipeModalVisible" @close="isRecipeModalVisible = false">
-                  <h2 class="text-xl font-bold">Create a new recipe</h2>
-  
-                  <div class="mt-4">
-  
-                    <label class="inline-flex items-center">
-                      <span class="ml-2">Recipe Name</span>
-                      <input type="text" v-model="newRecipeName" @input="checkRecipeNameConflict" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded"/>
-                      <span class="text-red-500" v-if="newRecipeMessage != ''"> {{ newRecipeMessage }}</span>
-                    </label>
-  
-                    <div class="mt-4">
-                      <span class="ml-2">Ingredients:</span>
-                      <ul class="list-disc ml-4 max-h-60 overflow-x-scroll">
-                        <li v-for="ingredient in newRecipeIngredients" class="hover:text-red-500 hover:font-bold hover:cursor-pointer" @click="deleteNewRecipeIngredient(ingredient)">
-                          {{ ingredient }}
-                        </li>
-                      </ul>
-                      <input type="text" v-model="newRecipeIngredientToAdd" @keyup.enter="addNewRecipeIngredientToNewRecipe" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded"/>
-                      <button @click="addNewRecipeIngredientToNewRecipe" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                        +
-                      </button>
-                    </div>
-  
-                    <div class="mt-4" v-if="modalMessage != ''">
-                      <p class="text-blue-500">{{ modalMessage }}</p>
-                    </div>
-  
-                    <div class="mt-4">
-                      <button @click="createRecipe" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                        Create new recipe
-                      </button>
-                      <button @click="clearNewRecipe" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                        Clear
-                      </button>
-                      <button @click="isRecipeModalVisible = false" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                        Close
-                      </button>
-                    </div>
-  
-                  </div>
-                </Modal>
   
               </div>
             </div>
@@ -202,6 +158,55 @@
           This is a footer
         </footer> -->
       </div>
+
+      <Modal :show="isRecipeEditModalVisible" @close="isRecipeEditModalVisible = false">
+
+        <div class="w-full">
+          <h2 class="text-xl font-bold">{{ editRecipeOriginalName }}</h2>
+
+          <div class="mt-4 w-full">
+            <span class="ml-2">Name:</span>
+            <input type="text" v-model="editRecipeName" @input="checkEditRecipeNameConflict" class="w-full ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
+            <span class="text-red-500" v-if="editRecipeNameMessage != ''"> {{ editRecipeNameMessage }}</span>
+          </div>
+
+          <div class="grid grid-cols-2">
+            <div class="mt-4 w-full">
+              <span class="ml-2">Ingredients:</span>
+              <ul class="list-disc ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2">
+                <li>
+                  <input type="text" v-model="editRecipeIngredientToAdd" @keyup.enter="addNewRecipeIngredientToEditRecipe" class="max-h-60 overflow-x-scroll border border-amber-200 rounded"/>
+                  <button @click="addNewRecipeIngredientToEditRecipe" class="ml-1 border border-amber-200 rounded px-4">
+                    +
+                  </button>
+                </li>
+                <li v-for="ingredient in editRecipeIngredients">
+                  <span @click="removeIngredientFromEditRecipe(ingredient)" class="cursor-pointer">🗑️</span> {{ ingredient }}
+                </li>
+              </ul>
+            </div>
+
+            <div class="mt-4 w-full">
+              <span class="ml-2">Note:</span>
+              <textarea v-model="editRecipeNote" class="w-full ml-4 min-h-40 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"></textarea>
+            </div>
+          </div>
+
+          <div class="mt-4" v-if="modalMessage != ''">
+            <p class="text-blue-500">{{ modalMessage }}</p>
+          </div>
+
+          <div class="mt-4">
+            <button @click="saveEditedRecipe" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+              Save
+            </button>
+            <button @click="isRecipeEditModalVisible = false" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+              Close
+            </button>
+          </div>
+        </div>
+
+      </Modal>
   
       <Modal :show="isManagmentModalVisible" @close="isManagmentModalVisible = false">
         <h2 class="text-xl font-bold">Rename | Copy | Delete</h2>
@@ -294,12 +299,18 @@
     middleware: 'auth'
   });
   
+  const selectedRecipes = ref([]);
+  const selectedIngredients = ref([]);
+
   const fetchRecipe = await useFetch('/api/recipe');
   const fetchIngredients = await useFetch('/api/ingredient');
   const fetchMealplans = await useFetch('/api/mealplan');
   
   const recipes = ref(fetchRecipe.data);
-  const refresh_recipes = fetchRecipe.refresh;
+  const refresh_recipes = () => {
+    fetchRecipe.refresh();
+    selectedRecipes.value = [];
+  };
   
   const ingredients = ref(fetchIngredients.data);
   const refresh_ingredients = fetchIngredients.refresh;
@@ -307,13 +318,7 @@
   const mealplans = ref(fetchMealplans.data);
   const refresh_mealplans = fetchMealplans.refresh;
   
-  const selectedRecipes = ref([]);
-  const selectedIngredients = ref([]);
-  
-  const newRecipeName = ref('');
   const newIngredient = ref('');
-  const newRecipeIngredients = ref([]);
-  const newRecipeIngredientToAdd = ref('');
   
   const newMealplanNameInput = ref('');
   const newMealplanName = ref('');
@@ -324,13 +329,19 @@
   const hasLoadedMealplan = ref(false);
   const mealplanMessage = ref('');
   const mealplanIsSaved = ref(false);
+
+  const editRecipeId = ref('');
+  const editRecipeOriginalName = ref('');
+  const editRecipeName = ref('');
+  const editRecipeNote = ref('');
+  const editRecipeIngredients = ref([]);
+  const editRecipeNameMessage = ref('');
+  const editRecipeIngredientToAdd = ref('');
   
   const isRecipeEditModalVisible = ref(false);
-  const isRecipeModalVisible = ref(false);
   const isManagmentModalVisible = ref(false);
   
   const modalMessage = ref('');
-  const newRecipeMessage = ref('');
   
   const manageMealPlanStatus = ref('');
   const manageRecipeStatus = ref('');
@@ -357,18 +368,50 @@
     return selectedRecipes.value.length == 1 ? selectedRecipes.value[0] : null;
   }
   
+  const openEditRecipeModal = () => {
+    isRecipeEditModalVisible.value = true;
+    const selected = getSingleSelectedRecipe();
+    console.log(selected)
+    editRecipeId.value = selected.id;
+    editRecipeOriginalName.value = selected.name;
+    editRecipeName.value = selected.name;
+    editRecipeNote.value = selected.note;
+    editRecipeIngredients.value = selected.recipe_ingredients.map(i => i.ingredient.name);
+  }
+
+  const clearEditRecipe = () => {
+    editRecipeId.value = null;
+    editRecipeOriginalName.value = null;
+    editRecipeName.value = null;
+    editRecipeNote.value = null;
+    editRecipeIngredients.value = [];
+    editRecipeIngredientToAdd.value = null;
+  }
+
+  const openCreateRecipeModal = () => {
+    isRecipeEditModalVisible.value = true;
+    clearEditRecipe()
+  }
+
+  const removeIngredientFromEditRecipe = (ingredient) => {
+    console.log('Removing ingredient', ingredient);
+    editRecipeIngredients.value = editRecipeIngredients.value.filter(ing => ing != ingredient);
+  }
+
+  const addNewRecipeIngredientToEditRecipe = () => {
+    const clean = stripAndUseStandardCapitalization(editRecipeIngredientToAdd.value);
+    if (!clean || clean == '') {
+      editRecipeIngredientToAdd.value = '';
+      return;
+    };
+    if (!editRecipeIngredients.value.includes(clean)) {
+      editRecipeIngredients.value = [clean, ...editRecipeIngredients.value];
+    }
+    editRecipeIngredientToAdd.value = '';
+  }
+
   const stripAndUseStandardCapitalization = (string) => {
     return string.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-  }
-  
-  const deleteNewRecipeIngredient = (ingredient) => {
-    console.log('Deleting ingredient', ingredient);
-    newRecipeIngredients.value = newRecipeIngredients.value.filter(i => i != ingredient);
-  }
-  
-  const clearNewRecipe = () => {
-    newRecipeName.value = '';
-    newRecipeIngredients.value = [];
   }
   
   const addToMealplan = () => {
@@ -377,48 +420,50 @@
     mealplanIsSaved.value = false;
   }
   
-  const addNewRecipeIngredientToNewRecipe = () => {
-    const clean = stripAndUseStandardCapitalization(newRecipeIngredientToAdd.value);
-    if (!clean || clean == '') {
-      newRecipeIngredientToAdd.value = '';
-      return;
-    };
-    if (!newRecipeIngredients.value.includes(clean)) {
-      newRecipeIngredients.value.push(clean);
+  const createRecipeApi = async (recipeName, note, ingredients, recipeId) => {
+    const body = {
+      name: recipeName,
+      ingredients: ingredients,
+      note: note
     }
-    newRecipeIngredientToAdd.value = '';
-  }
-  
-  const createRecipeApi = async (recipeName, ingredients) => {
+
+    if (recipeId) {
+      body.id = recipeId;
+      body.fieldsToUpdate = ['name', 'note', 'ingredients'];
+    }
+
+    console.log("createRecipeApi", body);
+
     return fetch('/api/recipe', {
-      method: 'PUT',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(
-        { 
-          name: recipeName, 
-          ingredients: ingredients,
-          // note: ''  // todo
-        }
-      )
+      body: JSON.stringify(body)
     })
   }
-  
-  const createRecipe = async () => {
-    if (!newRecipeName.value || newRecipeIngredients.value.length == 0) {
+
+  const saveEditedRecipe = async () => {
+    if (!editRecipeName.value || editRecipeIngredients.value.length == 0) {
       console.log('Recipe name or ingredients missing');
       setMessageWithTimer(modalMessage, 'Recipe name or ingredients missing');
       return;
     }
-    const response = await createRecipeApi(newRecipeName.value, newRecipeIngredients.value);
+    const response = await createRecipeApi(
+      editRecipeName.value, 
+      editRecipeNote.value, 
+      editRecipeIngredients.value,
+      editRecipeId.value
+    );
     if (response.ok) {
-      setMessageWithTimer(modalMessage, 'Recipe saved!');
-      clearNewRecipe();
+      setMessageWithTimer(modalMessage, 'Recipe saved!', 10000);
+      clearEditRecipe();
       refresh_recipes();
       refresh_ingredients();
+      selectedRecipes.value = [];
+      console.log("Selected recipes", selectedRecipes.value);
     } else {
-      setMessageWithTimer(modalMessage, 'Could not save recipe 😢');
+      setMessageWithTimer(modalMessage, 'Could not save recipe');
     }
   }
   
@@ -545,14 +590,15 @@
     )
   }
   
-  const checkRecipeNameConflict = () => {
-    if (recipes.value.find(r => r.name == newRecipeName.value)) {
-      newRecipeMessage.value = 'Recipe already exists';
+  const checkEditRecipeNameConflict = () => {
+    if (recipes.value.find(r => r.name == editRecipeName.value) && editRecipeName.value != editRecipeOriginalName.value) {
+      editRecipeNameMessage.value = 'Recipe already exists';
     } else {
-      newRecipeMessage.value = '';
+      editRecipeNameMessage.value = '';
     }
   }
   
+
   const setMessageWithTimer = (field, msg, ms=6000) => {
     field.value = msg;
     setTimeout(() => {
@@ -592,7 +638,13 @@
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ id: recipeId, name: newName })
+      body: JSON.stringify(
+        { 
+          id: recipeId, 
+          name: newName,
+          fieldsToUpdate: ['name']
+        }
+      )
     })
     if (response.ok) {
       e.target.value = '';
@@ -672,8 +724,9 @@
     }).then(
       data => {
         const name = data.name + ' (copy)';
+        const note = data.note;
         const ingredients = data.recipe_ingredients.map(i => i.ingredient.name);
-        return createRecipeApi(name, ingredients);
+        return createRecipeApi(name, note, ingredients, null);
       }
     ).then(
       res => {
