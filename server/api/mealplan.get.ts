@@ -1,5 +1,5 @@
 import { FindOptions } from 'sequelize';
-import { Ingredient, Mealplan, MealplanIngredient, MealplanRecipe, Recipe, RecipeIngredient } from '../dao/models';
+import { Mealplan, MealplanIngredient, MealplanRecipe, MealplanRecipeIngredient } from '../dao/models';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -9,32 +9,24 @@ export default defineEventHandler(async (event) => {
     include: [
       {
         model: MealplanRecipe,
+        attributes: ['name', 'note', 'tags'],
+        order: [['name', 'ASC']],
         include: [
           {
-            model: Recipe,
-            attributes: ['id', 'name'],
-            include: [
-              {
-                model: RecipeIngredient,
-                include: [Ingredient],
-                order: [['name', 'ASC']]
-              }
-            ],
+            model: MealplanRecipeIngredient,
+            as: 'recipe_ingredients',
+            attributes: ['name'],
             order: [['name', 'ASC']]
           }
         ]
       },
       {
         model: MealplanIngredient,
-        include: [
-          {
-            model: Ingredient,
-            attributes: ['id', 'name']
-          }
-        ],
+        attributes: ['name'],
         order: [['name', 'ASC']]
       }
     ],
+    order: [['name', 'ASC']]
   }
 
   if (id) {

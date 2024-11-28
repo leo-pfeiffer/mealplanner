@@ -47,20 +47,22 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    let mealplanHtml = "<h2><b>Here is your mealplan:</b></h2>";
+    console.log('mealplan:', mealplan);
+
+    let mealplanHtml = "<h2><b>" + mealplan.name + "</b></h2>";
     mealplanHtml += "<h3><b>Recipes:</b></h3>";
     for (const mealplanRecipe of mealplan.mealplan_recipes) {
-      mealplanHtml += `<b>${mealplanRecipe.recipe.name}</b><br>`;
+      mealplanHtml += `<b>${mealplanRecipe.name}</b><br>`;
       mealplanHtml += "<ul>";
-      for (const recipeIngredient of mealplanRecipe.recipe.recipe_ingredients) {
-        mealplanHtml += `<li>${recipeIngredient.ingredient.name}</li>`;
+      for (const recipeIngredient of mealplanRecipe.recipe_ingredients) {
+        mealplanHtml += `<li>${recipeIngredient.name}</li>`;
       }
       mealplanHtml += "</ul>";
     }
     mealplanHtml += "<h3><b>Extra ingredients:</b></h3>";
     mealplanHtml += "<ul>";
     for (const mealplanIngredient of mealplan.mealplan_ingredients) {
-      mealplanHtml += `<li>${mealplanIngredient.ingredient.name}</li>`;
+      mealplanHtml += `<li>${mealplanIngredient.name}</li>`;
     }
     mealplanHtml += "</ul>";
 

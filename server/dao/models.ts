@@ -15,7 +15,7 @@ if (!PG_USER || !PG_PASSWORD || !PG_HOST || !PG_DATABASE) {
 }
 
 const sequelize = new Sequelize(
-    `postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}/${PG_DATABASE}?sslmode=require`,
+    `postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}/${PG_DATABASE}`,
     {
         dialectModule: pg,
     },
@@ -31,10 +31,13 @@ const tryConnection = async () => {
 
 tryConnection();
 
+// RECIPE
+
 interface Recipe extends Model<InferAttributes<Recipe>, InferCreationAttributes<Recipe>> {
     id: CreationOptional<number>;
     name: string;
     note: string;
+    tags: string[];
   }
 
 const Recipe = sequelize.define<Recipe>(
@@ -53,35 +56,18 @@ const Recipe = sequelize.define<Recipe>(
         note: {
             type: DataTypes.STRING,
             allowNull: true,
-        }
-    },
-)
-
-interface Ingredient extends Model<InferAttributes<Ingredient>, InferCreationAttributes<Ingredient>> {
-    id: CreationOptional<number>;
-    name: string;
-  }
-
-const Ingredient = sequelize.define<Ingredient>(
-    'ingredient', 
-    {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true,
         },
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            unique: true,
-        }
+        tags: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            allowNull: true,
+        },
     },
 );
 
 interface RecipeIngredient extends Model<InferAttributes<RecipeIngredient>, InferCreationAttributes<RecipeIngredient>> {
     id: CreationOptional<number>;
     recipeId: number;
-    ingredientId: number;
+    name: string;
   }
 
 const RecipeIngredient = sequelize.define<RecipeIngredient>(
@@ -100,21 +86,18 @@ const RecipeIngredient = sequelize.define<RecipeIngredient>(
                 key: 'id',
             }
         },
-        ingredientId: {
-            type: DataTypes.INTEGER,
+        name: {
+            type: DataTypes.STRING,
             allowNull: false,
-            references: {
-                model: Ingredient,
-                key: 'id',
-            }
         }
     },
 );
 
-Recipe.hasMany(RecipeIngredient, { foreignKey: 'recipeId' });
-Ingredient.hasMany(RecipeIngredient, { foreignKey: 'ingredientId' });
-RecipeIngredient.belongsTo(Recipe, { foreignKey: 'recipeId' });
-RecipeIngredient.belongsTo(Ingredient, { foreignKey: 'ingredientId' });
+Recipe.hasMany(RecipeIngredient, { foreignKey: 'recipeId', onDelete: 'CASCADE' });
+RecipeIngredient.hasMany(Recipe, { foreignKey: 'ingredientId', onDelete: 'CASCADE' });
+
+
+// MEALPLAN
 
 interface Mealplan extends Model<InferAttributes<Mealplan>, InferCreationAttributes<Mealplan>> {
     id: CreationOptional<number>;
@@ -139,8 +122,10 @@ const Mealplan = sequelize.define<Mealplan>(
 
 interface MealplanRecipe extends Model<InferAttributes<MealplanRecipe>, InferCreationAttributes<MealplanRecipe>> {
     id: CreationOptional<number>;
-    recipeId: number;
     mealplanId: number;
+    name: string;
+    note: string;
+    tags: string[];
   }
 
 const MealplanRecipe = sequelize.define<MealplanRecipe>(
@@ -151,14 +136,6 @@ const MealplanRecipe = sequelize.define<MealplanRecipe>(
             autoIncrement: true,
             primaryKey: true,
         },
-        recipeId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: Recipe,
-                key: 'id',
-            }
-        },
         mealplanId: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -167,13 +144,54 @@ const MealplanRecipe = sequelize.define<MealplanRecipe>(
                 key: 'id',
             }
         },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        note: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        tags: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            allowNull: true,
+        },
+    },
+);
+
+interface MealplanRecipeIngredient extends Model<InferAttributes<MealplanRecipeIngredient>, InferCreationAttributes<MealplanRecipeIngredient>> {
+    id: CreationOptional<number>;
+    mealplanRecipeId: number;
+    name: string;
+  }
+
+const MealplanRecipeIngredient = sequelize.define<MealplanRecipeIngredient>(
+    'mealplan_recipe_ingredient',
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        mealplanRecipeId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: MealplanRecipe,
+                key: 'id',
+            }
+        },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        }
     },
 );
 
 interface MealplanIngredient extends Model<InferAttributes<MealplanIngredient>, InferCreationAttributes<MealplanIngredient>> {
     id: CreationOptional<number>;
-    ingredientId: number;
     mealplanId: number;
+    name: string;
   }
 
 const MealplanIngredient = sequelize.define<MealplanIngredient>(
@@ -184,14 +202,6 @@ const MealplanIngredient = sequelize.define<MealplanIngredient>(
             autoIncrement: true,
             primaryKey: true,
         },
-        ingredientId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: {
-                model: Ingredient,
-                key: 'id',
-            }
-        },
         mealplanId: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -200,21 +210,28 @@ const MealplanIngredient = sequelize.define<MealplanIngredient>(
                 key: 'id',
             }
         },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        }
     },
 );
 
-Mealplan.hasMany(MealplanRecipe, { foreignKey: 'mealplanId' });
-MealplanRecipe.belongsTo(Mealplan, { foreignKey: 'mealplanId' });
+Mealplan.hasMany(MealplanRecipe, { foreignKey: 'mealplanId' , onDelete: 'CASCADE' });
 
-Recipe.hasMany(MealplanRecipe, { foreignKey: 'recipeId' });
-MealplanRecipe.belongsTo(Recipe, { foreignKey: 'recipeId' });
+MealplanRecipe.hasMany(MealplanRecipeIngredient, { foreignKey: 'mealplanRecipeId', onDelete: 'CASCADE', as: 'recipe_ingredients' });
 
-Mealplan.hasMany(MealplanIngredient, { foreignKey: 'mealplanId' });
-MealplanIngredient.belongsTo(Mealplan, { foreignKey: 'mealplanId' });
+Mealplan.hasMany(MealplanIngredient, { foreignKey: 'mealplanId', onDelete: 'CASCADE' });
 
-Ingredient.hasMany(MealplanIngredient, { foreignKey: 'ingredientId' });
-MealplanIngredient.belongsTo(Ingredient, { foreignKey: 'ingredientId' });
+sequelize.sync(
+);
 
-sequelize.sync();
-
-export { sequelize, Recipe, Ingredient, RecipeIngredient, Mealplan, MealplanRecipe, MealplanIngredient };
+export { 
+    sequelize, 
+    Recipe, 
+    RecipeIngredient, 
+    Mealplan, 
+    MealplanRecipe, 
+    MealplanRecipeIngredient, 
+    MealplanIngredient 
+};
