@@ -19,7 +19,6 @@ export const useLogin = () => {
             const token = data.body.token;
             if (token) {
                 useToken().setTokenCookie(token);
-                console.log("Login successful.");
                 return true;
             } else {
                 console.log("Missing token. Login failed.", data);

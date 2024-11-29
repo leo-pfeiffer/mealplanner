@@ -6,10 +6,9 @@
           <div class="flex flex-wrap py-2">
             <div class="py-1 px-4">
               <label>
-                <button @click="createNewMealplan" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                <button @click="createEmptyMealplanForm" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                 New meal plan
                 </button>
-                <input v-model="newMealplanNameInput" type="text" placeholder="Name" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded"/>
               </label>
             </div>
             <div class="py-1 px-4">
@@ -20,11 +19,6 @@
                 <option disabled selected value> -- select meal plan -- </option>
                 <option v-for="mealplan in mealplans" :key="mealplan.id" :value="mealplan.id" default="Fsa">{{ mealplan.name }}</option>
               </select>
-            </div>
-            <div class="py-1 px-4">
-              <button @click="isManagmentModalVisible = true" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                Manage
-              </button>
             </div>
             <div class="py-1 px-4">
               <button @click="resetApp" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
@@ -41,14 +35,14 @@
   
           <div class="h-full p-6 bg-white border border-amber-200 rounded-lg shadow">
             <div>
+
               <p class="m-1 text-xl">Recipes</p>
               <div class="inline-flex items-center">
-                <!-- Button to open the modal -->
+
                 <button @click="openCreateRecipeModal()" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                   Create recipe
                 </button>
 
-                <!-- Button to open the modal -->
                 <button v-if="canEditRecipe()" @click="openEditRecipeModal" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                   Edit
                 </button>
@@ -56,7 +50,7 @@
               </div>
             </div>
   
-            <div v-if="recipes" class="h-40 overflow-x-scroll border border-amber-300 my-2 p-2">
+            <div v-if="recipes" class="h-80 overflow-x-scroll border border-amber-300 my-2 p-2">
                 <div v-for="recipe in recipes" :key="recipe.id">
                   <label class="inline-flex items-center">
                     <input type="checkbox" :value="recipe" v-model="selectedRecipes" class="form-checkbox">
@@ -64,28 +58,6 @@
                   </label>
                 </div>
               </div>
-  
-              <hr class="my-8 border-amber-300">
-  
-              <div class="">
-                <p class="m-1 text-xl">Ingredients</p>
-                <div id="ingredients-create">
-                  <button @click="createIngredient" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                    Add ingredient
-                  </button>
-                  <input type="text" v-model="newIngredient" @keyup.enter="createIngredient" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded"/>
-                </div>
-              </div>
-  
-              <div v-if="ingredients" class="overflow-x-scroll h-40 border border-amber-300 my-2 p-2" id="ingredients-list">
-                <div v-for="ingredient in ingredients" :key="ingredient.id" class="w-full">
-                  <label class="inline-flex items-center">
-                    <input type="checkbox" :value="ingredient" v-model="selectedIngredients" class="form-checkbox">
-                    <span class="ml-2">{{ ingredient.name }}</span>
-                  </label>
-                </div>
-              </div>
-  
             </div>
         </div>
   
@@ -107,7 +79,13 @@
             <div v-if="newMealplanName == '' && !hasLoadedMealplan" class="inline-flex items-center">
               <p> Create a new mealplan or load an existing one!</p>
             </div>
+
             <div v-else>
+
+              <div class="mt-4">
+                <span class="ml-2">Name:</span>
+                <input type="text" v-model="updatedMealplanName" @input="updateMealplanNameInput" class="ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
+              </div>
   
               <div class="mt-4">
                 <span class="ml-2">Recipes:</span>
@@ -115,38 +93,51 @@
                   <li v-for="recipe in mealplanRecipes" class="pb-2">
                     {{ recipe.name }}
                     <ul class="list-disc ml-10">
-                      <li v-for="ingredient in recipe.recipe_ingredients" class="">
-                        {{ ingredient.ingredient.name }}
+                      <li v-if="recipe.recipe_ingredients" v-for="ingredient in recipe.recipe_ingredients" class="">
+                        {{ ingredient.name }}
                       </li>
                     </ul>
                   </li>
                 </ul>
                 <p v-else class="ml-4 text-amber-700">Select recipes on the left!</p>
               </div>
-  
-              <div class="mt-4">
-                <span class="ml-2">Additional Ingredients:</span>
-                <ul v-if="mealplanIngredients.length > 0" class="list-disc ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2">
-                  <li v-for="ingredient in mealplanIngredients" class="">
-                    {{ ingredient.name }}
+
+              <div class="mt-4 w-full">
+                <span class="ml-2">Ingredients:</span>
+                <ul class="list-disc ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2">
+                  <li>
+                    <input type="text" v-model="mealplanIngredientToAdd" @keyup.enter="addNewIngredientToNewMealplan" class="max-h-60 overflow-x-scroll border border-amber-200 rounded"/>
+                    <button @click="addNewIngredientToNewMealplan" class="ml-1 border border-amber-200 rounded px-4">
+                      +
+                    </button>
+                  </li>
+                  <li v-for="ingredient in mealplanIngredients">
+                    <span @click="removeIngredientFromNewMealplan(ingredient)" class="cursor-pointer">🗑️</span> {{ ingredient }}
                   </li>
                 </ul>
-                <p v-else class="ml-4 text-amber-700">Select additional ingredients on the left!</p>
               </div>
               
               <button 
-              @click="createMealPlan" :disabled="mealplanIsSaved" :class="mealplanIsSaved ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'" class="mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                Save meal plan
+              @click="createMealPlan" v-if="!mealplanIsSaved" :class="mealplanIsSaved ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                Save
               </button>
               <button 
-              @click="sendAsEmail" :disabled="!mealplanIsSaved" :class="!mealplanIsSaved ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+              @click="copyMealplan(currentMealplanId)" v-if="mealplanIsSaved" :class="!mealplanIsSaved ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                Copy
+              </button>
+              <button 
+              @click="deleteMealplan(currentMealplanId)" v-if="currentMealplanId" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent hover:cursor-pointer rounded">
+                Delete
+              </button>
+              <button 
+              @click="sendAsEmail(currentMealplanId)" v-if="currentMealplanId && mealplanIsSaved" :class="!mealplanIsSaved ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
               ✉️ Send as e-mail
               </button>
   
-              <div class="mt-4" v-if="mealplanMessage != ''">
-                <p class="text-blue-500">{{ mealplanMessage }}</p>
-              </div>
-  
+            </div>
+
+            <div class="mt-4" v-if="mealplanMessage != ''">
+              <p class="text-blue-500">{{ mealplanMessage }}</p>
             </div>
           </div>
         </div>
@@ -200,91 +191,18 @@
             <button @click="saveEditedRecipe" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
               Save
             </button>
+            <button @click="copyRecipe(editRecipeId)" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+              Copy
+            </button>
+            <button @click="deleteRecipe(editRecipeId)" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+              Delete
+            </button>
             <button @click="isRecipeEditModalVisible = false" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
               Close
             </button>
           </div>
         </div>
 
-      </Modal>
-  
-      <Modal :show="isManagmentModalVisible" @close="isManagmentModalVisible = false">
-        <h2 class="text-xl font-bold">Rename | Copy | Delete</h2>
-  
-        <p class="my-4">
-          ℹ️ You can't delete recipes or ingredients that are used in a mealplan or other recipes. 
-          To do so, you must first remove them from the mealplan / recipe, or delete the mealplan / recipe.
-        </p>
-  
-        <hr class="my-8 border-amber-300">
-  
-        <div class="my-8 flex justify-between">
-  
-          <div class="h-70">
-            <p class="text-xl m-2">Meal Plans <span>{{ manageMealPlanStatus }}</span></p>
-            <div class="max-h-60 overflow-x-scroll">
-              <table class="table-auto">
-                <tbody>
-                  <tr v-for="mealplan in mealplans" :key="mealplan.id">
-                    <td class="bg-amber-50">{{ mealplan.name }}</td>
-                    <td @click="deleteMealplan(mealplan.id)" class="text-center hover:cursor-pointer">🗑️</td>
-                    <td @click="copyMealplan(mealplan.id)" class="text-center hover:cursor-pointer">
-                      📋
-                    </td>
-                    <td> <input type="text" placeholder="Rename" @keyup.enter="updateMealplanName(mealplan.id, $event)"></input> </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-  
-  
-          <div class="h-70">
-            <p class="text-xl m-2">Recipes <span>{{ manageRecipeStatus }}</span></p>
-            <div class="max-h-60 overflow-x-scroll">
-              <table class="table-auto">
-                <tbody>
-                  <tr v-for="recipe in recipes" :key="recipe.id">
-                    <td class="bg-amber-50">{{ recipe.name }}</td>
-                    <td @click="deleteRecipe(recipe.id)" class="text-center" :class="isRecipeDeletable(recipe.id) ? 'hover:cursor-pointer' : 'hover:cursor-not-allowed'">
-                      {{ isRecipeDeletable(recipe.id) ? '🗑️' : '🚫' }}
-                    </td>
-                    <td @click="copyRecipe(recipe.id)" class="text-center hover:cursor-pointer">
-                      📋
-                    </td>
-                    <td> <input type="text" placeholder="Rename" @keyup.enter="updateRecipeName(recipe.id, $event)"></input> </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-  
-  
-          <div class="h-70">
-            <p class="text-xl m-2">Ingredients <span>{{ manageIngredientStatus }}</span></p>
-            <div class="max-h-60 overflow-x-scroll">
-              <table class="table-auto">
-                <tbody>
-                  <tr v-for="ingredient in ingredients" :key="ingredient.id">
-                    <td class="bg-amber-50">{{ ingredient.name }}</td>
-                    <td @click="deleteIngredient(ingredient.id)" class="text-center" :class="isIngredientDeletable(ingredient.id) ? 'hover:cursor-pointer' : 'hover:cursor-not-allowed'">
-                      {{ isIngredientDeletable(ingredient.id) ? '🗑️' : '🚫' }}
-                    </td>
-                    <td> <input type="text" placeholder="Rename" @keyup.enter="updateIngredientName(ingredient.id, $event)"></input> </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        
-        </div>
-  
-        <div class="mt-4">
-          <button @click="isManagmentModalVisible = false" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-            Close
-          </button>
-        </div>
-  
       </Modal>
   
     </div>
@@ -303,7 +221,6 @@
   const selectedIngredients = ref([]);
 
   const fetchRecipe = await useFetch('/api/recipe');
-  const fetchIngredients = await useFetch('/api/ingredient');
   const fetchMealplans = await useFetch('/api/mealplan');
   
   const recipes = ref(fetchRecipe.data);
@@ -312,16 +229,12 @@
     selectedRecipes.value = [];
   };
   
-  const ingredients = ref(fetchIngredients.data);
-  const refresh_ingredients = fetchIngredients.refresh;
-  
   const mealplans = ref(fetchMealplans.data);
   const refresh_mealplans = fetchMealplans.refresh;
   
-  const newIngredient = ref('');
-  
-  const newMealplanNameInput = ref('');
   const newMealplanName = ref('');
+  const updatedMealplanName = ref('');
+  const mealplanIngredientToAdd = ref('');
   const mealplanIngredients = ref([]);
   const mealplanRecipes = ref([]);
   const loadedMealplan = ref({});
@@ -339,28 +252,14 @@
   const editRecipeIngredientToAdd = ref('');
   
   const isRecipeEditModalVisible = ref(false);
-  const isManagmentModalVisible = ref(false);
   
   const modalMessage = ref('');
   
   const manageMealPlanStatus = ref('');
   const manageRecipeStatus = ref('');
-  const manageIngredientStatus = ref('');
 
   const canEditRecipe = () => {
     return selectedRecipes.value.length == 1;
-  }
-  
-  const isRecipeDeletable = (recipeId) => {
-    // todo fix
-    return !mealplans.value.some(m => m.mealplan_recipes.some(r => r.recipe.id == recipeId));
-  }
-  
-  const isIngredientDeletable = (ingredientId) => {
-    // todo fix
-    const recipe_ingredient = recipes.value.some(r => r.recipe_ingredients.some(i => i.ingredient.id == ingredientId));
-    const mealplan_ingredient = mealplans.value.some(m => m.mealplan_ingredients.some(i => i.ingredient.id == ingredientId));
-    return !recipe_ingredient && !mealplan_ingredient;
   }
 
   const getSingleSelectedRecipe = () => {
@@ -374,7 +273,7 @@
     editRecipeOriginalName.value = selected.name;
     editRecipeName.value = selected.name;
     editRecipeNote.value = selected.note;
-    editRecipeIngredients.value = selected.recipe_ingredients.map(i => i.ingredient.name);
+    editRecipeIngredients.value = selected.recipe_ingredients.map(i => i.name);
   }
 
   const clearEditRecipe = () => {
@@ -391,8 +290,31 @@
     clearEditRecipe()
   }
 
+  const updateMealplanNameInput = () => {
+    if (newMealplanName.value !== updatedMealplanName.value) {
+      mealplanIsSaved.value = false;
+    }
+  }
+
   const removeIngredientFromEditRecipe = (ingredient) => {
     editRecipeIngredients.value = editRecipeIngredients.value.filter(ing => ing != ingredient);
+  }
+
+  const removeIngredientFromNewMealplan = (ingredient) => {
+    mealplanIngredients.value = mealplanIngredients.value.filter(ing => ing != ingredient);
+  }
+
+  const addNewIngredientToNewMealplan = () => {
+    const clean = stripAndUseStandardCapitalization(mealplanIngredientToAdd.value);
+    if (!clean || clean == '') {
+      mealplanIngredientToAdd.value = '';
+      return;
+    };
+    if (!mealplanIngredients.value.includes(clean)) {
+      mealplanIngredients.value = [clean, ...mealplanIngredients.value];
+    }
+    mealplanIngredientToAdd.value = '';
+    mealplanIsSaved.value = false;
   }
 
   const addNewRecipeIngredientToEditRecipe = () => {
@@ -412,8 +334,7 @@
   }
   
   const addToMealplan = () => {
-    mealplanIngredients.value = [...selectedIngredients.value];
-    mealplanRecipes.value = [...selectedRecipes.value];
+    mealplanRecipes.value = [...selectedRecipes.value.sort((a, b) => a.name.localeCompare(b.name))];
     mealplanIsSaved.value = false;
   }
   
@@ -453,29 +374,9 @@
       setMessageWithTimer(modalMessage, 'Recipe saved!', 10000);
       clearEditRecipe();
       refresh_recipes();
-      refresh_ingredients();
       selectedRecipes.value = [];
     } else {
       setMessageWithTimer(modalMessage, 'Could not save recipe');
-    }
-  }
-  
-  const createIngredient = async () => {
-    const clean = stripAndUseStandardCapitalization(newIngredient.value);
-    if (!clean || clean == '') {
-      newIngredient.value = '';
-      return;
-    };
-    const response = await fetch('/api/ingredient', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name: clean })
-    })
-    if (response.ok) {
-      newIngredient.value = ''
-      refresh_ingredients();
     }
   }
   
@@ -484,71 +385,58 @@
       return;
     }
     loadedMealplan.value = mealplans.value.find(m => m.id == currentMealplanId.value);
-    newMealplanNameInput.value = '';
     hasLoadedMealplan.value = true;
   
     // load mealplan into mealplanIngredients and mealplanRecipes
     newMealplanName.value = loadedMealplan.value.name;
+    updatedMealplanName.value = loadedMealplan.value.name;
+    currentMealplanId.value = loadedMealplan.value.id;
   
-    mealplanIngredients.value = [...loadedMealplan.value.mealplan_ingredients.map(r => r.ingredient)];
-    mealplanRecipes.value = [...loadedMealplan.value.mealplan_recipes.map(r => r.recipe)];
-  
-    // select ingredients and recipes
-    const recipeIdsInMealplan = loadedMealplan.value.mealplan_recipes.map(r => r.recipe.id);
-    const newSelectedRecipes = [];
-    for (const r of recipes.value) {
-      if (recipeIdsInMealplan.includes(r.id)) {
-        newSelectedRecipes.push(r);
-      }
-    }
-    selectedRecipes.value = [...newSelectedRecipes];
-  
-    const ingredientIdsInMealplan = loadedMealplan.value.mealplan_ingredients.map(r => r.ingredient.id);
-    const newSelectedIngredients = [];
-    for (const i of ingredients.value) {
-      if (ingredientIdsInMealplan.includes(i.id)) {
-        newSelectedIngredients.push(i);
-      }
-    }
-    selectedIngredients.value = [...newSelectedIngredients];
+    mealplanIngredients.value = [...loadedMealplan.value.mealplan_ingredients.map(i => i.name)];
+    mealplanRecipes.value = [...loadedMealplan.value.mealplan_recipes];
 
     mealplanIsSaved.value = true;
   }
-  
-  const resetApp = () => {
+
+  const resetMealplanForm = () => {
     newMealplanName.value = '';
-    newMealplanNameInput.value = '';
+    updatedMealplanName.value = '';
     hasLoadedMealplan.value = false;
     loadedMealplan.value = {};
-    selectedRecipes.value = [];
-    selectedIngredients.value = [];
     mealplanIngredients.value = [];
     mealplanRecipes.value = [];
+    currentMealplanId.value = null;
   }
   
-  const createNewMealplan = () => {
-    newMealplanName.value = newMealplanNameInput.value;
-    newMealplanNameInput.value = '';
+  const resetApp = () => {
+    resetMealplanForm();
+    selectedRecipes.value = [];
+    selectedIngredients.value = [];
+  }
+  
+  const createEmptyMealplanForm = () => {
+    newMealplanName.value = null;
+    updatedMealplanName.value = null;
     hasLoadedMealplan.value = false;
     loadedMealplan.value = {};
-    currentMealplanId.value = '';
+    currentMealplanId.value = null;
     mealplanRecipes.value = [];
     mealplanIngredients.value = [];
     mealplanIsSaved.value = false;
   }
   
-  const createMealplanApi = async (name, ingredients, recipes) => {
+  const createMealplanApi = async (mealplanId, name, ingredients, recipes) => {
     return fetch('/api/mealplan', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ name: name, ingredients: ingredients, recipes: recipes })
+      body: JSON.stringify({ id: mealplanId, name: name, ingredients: ingredients, recipes: recipes })
     })
   }
   
   const createMealPlan = async () => {
-    if (!newMealplanName.value) {
+    if (!updatedMealplanName.value) {
       setMessageWithTimer(mealplanMessage, 'Mealplan name missing');
       return;
     }
@@ -556,19 +444,22 @@
       setMessageWithTimer(mealplanMessage, 'Please select either recipes or ingredients');
       return;
     }
-    const ingredients = mealplanIngredients.value.map(i => i.id);
-    const recipes = mealplanRecipes.value.map(i => i.recipe_ingredients)
-      .flatMap(ri => ri.map(r => r.recipeId))
-      .reduce((acc, cur) => acc.includes(cur) ? acc : [...acc, cur], []);
     
-    await createMealplanApi(newMealplanName.value, ingredients, recipes)
+    await createMealplanApi(
+      currentMealplanId.value ? currentMealplanId.value : null,
+      updatedMealplanName.value, 
+      mealplanIngredients.value, 
+      mealplanRecipes.value
+    )
     .then(
       res => res.json()
     ).then(
       data => {
         if (data.status === 200) {
           mealplanIsSaved.value = true;
-          currentMealplanId.value = data.body.mealplanId;
+          currentMealplanId.value = data.body.mealplan.id;
+          updatedMealplanName.value = data.body.mealplan.name;
+          newMealplanName.value = data.body.mealplan.name;
           setMessageWithTimer(mealplanMessage, 'Mealplan saved!');
           refresh_mealplans();
         } else {
@@ -585,7 +476,6 @@
       editRecipeNameMessage.value = '';
     }
   }
-  
 
   const setMessageWithTimer = (field, msg, ms=6000) => {
     field.value = msg;
@@ -593,28 +483,7 @@
       field.value = '';
     }, ms);
   }
-  
-  const updateIngredientName = async (ingredientId, e) => {
-    const newName = stripAndUseStandardCapitalization(e.target.value);
-    if (!newName || newName == ''){
-      return
-    };
-    const response = await fetch('/api/ingredient', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ id: ingredientId, name: newName })
-    })
-    if (response.ok) {
-      e.target.value = '';
-      refresh_ingredients();
-      setMessageWithTimer(manageIngredientStatus, '✅', 1000);
-    } else {
-      setMessageWithTimer(manageIngredientStatus, '⚠️', 2000);
-    }
-  }
-  
+
   const updateRecipeName = async (recipeId, e) => {
     const newName = e.target.value.trim();
     if (!newName || newName == ''){
@@ -642,52 +511,33 @@
     }
   }
   
-  const updateMealplanName = async (mealplanId, e) => {
-    const newName = e.target.value.trim();
-    if (!newName || newName == ''){
-      return
-    };
-    const response = await fetch('/api/mealplan', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ id: mealplanId, name: newName })
-    })
-    if (response.ok) {
-      e.target.value = '';
-      refresh_mealplans();
-      setMessageWithTimer(manageMealPlanStatus, '✅', 1000);
-    } else {
-      setMessageWithTimer(manageMealPlanStatus, '⚠️', 2000);
-    }
-  }
-  
   const copyMealplan = (mealplanId) => {
     fetch(`/api/mealplan?id=${mealplanId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
       },
-    }).then(res => {
-      if (res.ok) {
-        return res.json();
-      } else {
-        console.log('Could not copy mealplan');
-      }
-    }).then(
+    })
+    .then(res => res.json())
+    .then(
       data => {
         const name = data.name + ' (copy)';
-        const ingredients = data.mealplan_ingredients.map(i => i.ingredient.id);
-        const recipes = data.mealplan_recipes.map(r => r.recipeId);
-        return createMealplanApi(name, ingredients, recipes);
+        const ingredients = data.mealplan_ingredients.map(i => i.name);
+        const recipes = data.mealplan_recipes;
+        return createMealplanApi(
+          null,
+          name, 
+          ingredients, 
+          recipes
+        );
       }
     ).then(
       res => {
         if (res.ok) {
-          console.log('Mealplan copied');
           refresh_mealplans();
+          setMessageWithTimer(mealplanMessage, 'Mealplan copied!');
         } else {
+          setMessageWithTimer(mealplanMessage, 'Could not copy mealplan.');
           console.log('Could not copy mealplan');
         }
       }
@@ -700,52 +550,28 @@
       headers: {
         'Content-Type': 'application/json'
       },
-    }).then(res => {
-      if (res.ok) {
-        return res.json();
-      } else {
-        console.log('Could not copy recipe');
-      }
-    }).then(
+    }).then(res => res.json())
+    .then(
       data => {
         const name = data.name + ' (copy)';
         const note = data.note;
-        const ingredients = data.recipe_ingredients.map(i => i.ingredient.name);
+        const ingredients = data.recipe_ingredients.map(i => i.name);
         return createRecipeApi(name, note, ingredients, null);
       }
     ).then(
       res => {
         if (res.ok) {
           refresh_recipes();
+          setMessageWithTimer(modalMessage, 'Recipe copied!');
         } else {
-          console.log('Could not copy recipe');
+          setMessageWithTimer(modalMessage, 'Could not copy recipe.');
+          console.log('Could not copy recipe.');
         }
       }
     );
   }
-  
-  const deleteIngredient = async (ingredientId) => {
-    if (!isIngredientDeletable(ingredientId)) {
-      return;
-    }
-    const resp = await fetch(`/api/ingredient?id=${ingredientId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    })
-    if (resp.ok) {
-      refresh_ingredients();
-    } else {
-      // todo
-      console.log('Could not delete ingredient');
-    }
-  }
-  
+
   const deleteRecipe = async (recipeId) => {
-    if (!isRecipeDeletable(recipeId)) {
-      return;
-    }
     const resp = await fetch(`/api/recipe?id=${recipeId}`, {
       method: 'DELETE',
       headers: {
@@ -754,9 +580,11 @@
     })
     if (resp.ok) {
       refresh_recipes();
+      clearEditRecipe();
+      setMessageWithTimer(modalMessage, 'Recipe deleted!');
     } else {
-      // todo
       console.log('Could not delete recipe');
+      setMessageWithTimer(modalMessage, 'Could not delete recipe');
     }
   }
   
@@ -769,18 +597,16 @@
     })
     if (resp.ok) {
       refresh_mealplans();
+      resetMealplanForm();
+      setMessageWithTimer(mealplanMessage, 'Mealplan deleted!');
     } else {
+      setMessageWithTimer(mealplanMessage, 'Could not delete mealplan');
       console.log('Could not delete mealplan');
     }
   }
 
-  const sendAsEmail = async () => {
-    if (!currentMealplanId.value) {
-      console.log('No mealplan saved or loaded.');
-      return;
-    }
-    console.log('Sending mealplan as email:', currentMealplanId.value);
-    const resp = await fetch(`/api/internal/email?mealplanId=${currentMealplanId.value}`, {
+  const sendAsEmail = async (mealplanId) => {
+    await fetch(`/api/internal/email?mealplanId=${mealplanId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -789,7 +615,6 @@
     .then(res => res.json())
     .then(data => {
       if (data.status === 200) {
-        console.log('Mealplan sent as email');
         setMessageWithTimer(mealplanMessage, 'Mealplan sent as email!');
       } else {
         console.log('Could not send mealplan as email');

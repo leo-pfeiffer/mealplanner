@@ -1,4 +1,4 @@
-import { Ingredient, Recipe, RecipeIngredient } from '../dao/models';
+import { Recipe, RecipeIngredient } from '../dao/models';
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event);
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
         include: [
           {
             model: RecipeIngredient, 
-            include: [Ingredient],
+            attributes: ['name'],
             order: [['name', 'ASC']]
           }
         ]
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
       include: [
         {
           model: RecipeIngredient, 
-          include: [Ingredient],
+          attributes: ['name'],
           order: [['name', 'ASC']]
         }
       ], 
