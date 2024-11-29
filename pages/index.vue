@@ -52,7 +52,7 @@
 
             <div class="mt-2">
                 <!-- <span class="ml-2">Search:</span> -->
-                <input type="text" v-model="recipeFilter" placeholder="Search" class="w-80 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
+                <input type="text" v-model="recipeFilter" placeholder="Search by name or tag" class="w-80 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
             </div>
   
             <div v-if="recipes" class="h-80 overflow-x-scroll border border-amber-300 my-2 p-2">
@@ -349,10 +349,17 @@
 
   const getFilteredRecipes = () => {
     const cleanFilter = recipeFilter.value.trim().toLowerCase();
+    console.log("Filter", cleanFilter);
     if (cleanFilter == '') {
       return recipes.value;
     }
-    return recipes.value.filter(r => r.name.toLowerCase().includes(cleanFilter));
+    const filterFunc = (recipe) => {
+      console.log(recipe);
+      const name = recipe.name.toLowerCase().includes(cleanFilter)
+      const tag = recipe.tags && recipe.tags.join(' ').toLowerCase().includes(cleanFilter);
+      return name || tag;
+    }
+    return recipes.value.filter(filterFunc);
   }
 
   const getSingleSelectedRecipe = () => {
