@@ -49,9 +49,14 @@
   
               </div>
             </div>
+
+            <div class="mt-2">
+                <!-- <span class="ml-2">Search:</span> -->
+                <input type="text" v-model="recipeFilter" placeholder="Search" class="w-80 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
+            </div>
   
             <div v-if="recipes" class="h-80 overflow-x-scroll border border-amber-300 my-2 p-2">
-                <div v-for="recipe in recipes" :key="recipe.id">
+                <div v-for="recipe in getFilteredRecipes()" :key="recipe.id">
                   <label class="inline-flex items-center">
                     <input type="checkbox" :value="recipe" v-model="selectedRecipes" class="form-checkbox">
                     <span class="ml-2">{{ recipe.name }}</span>
@@ -239,6 +244,9 @@
 
   const dropdownSelectedMealplanId = ref('');
 
+  // recipe filter
+  const recipeFilter = ref('');
+
   // Info messages
   const editMealplanMessage = ref('');
   const editRecipeModalMessage = ref('');
@@ -314,6 +322,14 @@
   const openCreateRecipeModal = () => {
     resetEditRecipe();
     isEditRecipeModelVisible.value = true;
+  }
+
+  const getFilteredRecipes = () => {
+    const cleanFilter = recipeFilter.value.trim().toLowerCase();
+    if (cleanFilter == '') {
+      return recipes.value;
+    }
+    return recipes.value.filter(r => r.name.toLowerCase().includes(cleanFilter));
   }
 
   const getSingleSelectedRecipe = () => {
