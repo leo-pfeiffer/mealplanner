@@ -183,8 +183,25 @@
             </div>
 
             <div class="mt-4 w-full">
-              <span class="ml-2">Note:</span>
-              <textarea v-model="editRecipe.note" class="w-full ml-4 min-h-40 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"></textarea>
+              <div>
+                <span class="ml-2">Note:</span>
+                <textarea v-model="editRecipe.note" class="w-full ml-4 min-h-20 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"></textarea>
+              </div>
+
+              <div class="mt-4">
+              <span class="ml-2">Tags:</span>
+              <ul class="list-disc ml-4 max-h-40 overflow-x-scroll border border-amber-200 rounded p-2">
+                <li>
+                  <input type="text" v-model="editRecipe.newTag" @keyup.enter="addNewTagToRecipe" class="max-h-60 overflow-x-scroll border border-amber-200 rounded"/>
+                  <button @click="addNewTagToRecipe" class="ml-1 border border-amber-200 rounded px-4">
+                    +
+                  </button>
+                </li>
+                <li v-for="tag in editRecipe.tags">
+                  <span @click="removeTagFromRecipe(tag)" class="cursor-pointer">🗑️</span> {{ tag }}
+                </li>
+              </ul>
+            </div>
             </div>
           </div>
 
@@ -274,6 +291,8 @@
     note: null,
     ingredients: [],
     newIngredient: null,
+    newTag: null,
+    tags: [],
   });
   
   const openEditRecipeModal = () => {
@@ -287,6 +306,8 @@
     editRecipe.value.note = selected.note;
     editRecipe.value.ingredients = selected.recipe_ingredients.map(i => i.name);
     editRecipe.value.newIngredient = null;
+    editRecipe.value.tags = selected.tags || [];
+    editRecipe.value.newTag = null;
     editRecipeModalNewNameMessage.value = null;
   }
 
@@ -297,6 +318,8 @@
     editRecipe.value.note = null;
     editRecipe.value.ingredients = [];
     editRecipe.value.newIngredient = null;
+    editRecipe.value.newTag = null;
+    editRecipe.value.tags = [];
   }
 
   const resetEditMealplan = () => {
@@ -376,6 +399,22 @@
     editRecipe.value.newIngredient = null;
   }
 
+  const addNewTagToRecipe = () => {
+    const clean = editRecipe.value.newTag.trim().toLowerCase();
+    if (!clean || clean == '') {
+      editRecipe.value.newTag = null;
+      return;
+    };
+    if (!editRecipe.value.tags.includes(clean)) {
+      editRecipe.value.tags = [clean, ...editRecipe.value.tags];
+    }
+    editRecipe.value.newTag = null;
+  }
+
+  const removeTagFromRecipe = (tag) => {
+    editRecipe.value.tags = editRecipe.value.tags.filter(t => t != tag);
+  }
+
   const stripAndUseStandardCapitalization = (string) => {
     return string.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   }
@@ -385,16 +424,17 @@
     editMealplan.value.state = MealplanState.UPDATED;
   }
   
-  const createRecipeApi = async (recipeName, note, ingredients, recipeId) => {
+  const createRecipeApi = async (recipeName, note, ingredients, tags, recipeId) => {
     const body = {
       name: recipeName,
       ingredients: ingredients,
-      note: note
+      note: note,
+      tags: tags
     }
 
     if (recipeId) {
       body.id = recipeId;
-      body.fieldsToUpdate = ['name', 'note', 'ingredients'];
+      body.fieldsToUpdate = ['name', 'note', 'ingredients', 'tags'];
     }
 
     return fetch('/api/recipe', {
@@ -415,6 +455,7 @@
       editRecipe.value.newName, 
       editRecipe.value.note,
       editRecipe.value.ingredients,
+      editRecipe.value.tags,
       editRecipe.value.recipeId
     );
     if (response.ok) {
@@ -550,7 +591,8 @@
         const name = data.name + ' (copy)';
         const note = data.note;
         const ingredients = data.recipe_ingredients.map(i => i.name);
-        return createRecipeApi(name, note, ingredients, null);
+        const tags = data.tags;
+        return createRecipeApi(name, note, ingredients, tags, null);
       }
     ).then(
       res => {
