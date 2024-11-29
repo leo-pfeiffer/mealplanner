@@ -80,7 +80,6 @@ export default defineEventHandler(async (event) => {
       }
       catch (error) {
         await t.rollback();
-        console.log('An error occurred while updating the recipe:', error);
         return createError({
           statusCode: 400,
           statusMessage: 'Error updating recipe',

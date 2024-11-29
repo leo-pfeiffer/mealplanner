@@ -15,7 +15,7 @@ if (!PG_USER || !PG_PASSWORD || !PG_HOST || !PG_DATABASE) {
 }
 
 const sequelize = new Sequelize(
-    `postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}/${PG_DATABASE}`,
+    `postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}/${PG_DATABASE}?sslmode=require`,
     {
         dialectModule: pg,
     },
@@ -224,6 +224,7 @@ MealplanRecipe.hasMany(MealplanRecipeIngredient, { foreignKey: 'mealplanRecipeId
 Mealplan.hasMany(MealplanIngredient, { foreignKey: 'mealplanId', onDelete: 'CASCADE' });
 
 sequelize.sync(
+    { force: true }
 );
 
 export { 

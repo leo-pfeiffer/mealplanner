@@ -47,8 +47,6 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    console.log('mealplan:', mealplan);
-
     let mealplanHtml = "<h2><b>" + mealplan.name + "</b></h2>";
     mealplanHtml += "<h3><b>Recipes:</b></h3>";
     for (const mealplanRecipe of mealplan.mealplan_recipes) {
