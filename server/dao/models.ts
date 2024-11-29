@@ -223,9 +223,7 @@ MealplanRecipe.hasMany(MealplanRecipeIngredient, { foreignKey: 'mealplanRecipeId
 
 Mealplan.hasMany(MealplanIngredient, { foreignKey: 'mealplanId', onDelete: 'CASCADE' });
 
-sequelize.sync(
-    { force: true }
-);
+sequelize.sync();
 
 export { 
     sequelize, 
