@@ -349,7 +349,6 @@
 
   const getFilteredRecipes = () => {
     const cleanFilter = recipeFilter.value.trim().toLowerCase();
-    console.log("Filter", cleanFilter);
     if (cleanFilter == '') {
       return recipes.value;
     }
@@ -586,7 +585,6 @@
   }
   
   const copyRecipe = (recipeId) => {
-    console.log('copying recipe', recipeId);
     fetch(`/api/recipe?id=${recipeId}`, {
       method: 'GET',
       headers: {
