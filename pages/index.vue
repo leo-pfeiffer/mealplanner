@@ -303,8 +303,8 @@
   const spinnerMessage = ref('');
 
   const showSpinnerWithMessage = (message) => {
-    spinnerMessage.value = message;
     showSpinner.value = true;
+    spinnerMessage.value = message;
   }
 
   const hideSpinner = () => {
