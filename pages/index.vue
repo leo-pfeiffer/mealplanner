@@ -226,6 +226,8 @@
         </div>
 
       </Modal>
+
+      <Spinner v-if="showSpinner" :text="spinnerMessage"></Spinner>
   
     </div>
   
@@ -234,6 +236,7 @@
 <script setup>  
   import { ref } from 'vue';
   import Modal from './components/Modal.vue';
+  import Spinner from './components/Spinner.vue';
 
   definePageMeta({
     middleware: 'auth'
@@ -294,6 +297,20 @@
     newTag: null,
     tags: [],
   });
+
+  // Loading spinner
+  const showSpinner = ref(false);
+  const spinnerMessage = ref('');
+
+  const showSpinnerWithMessage = (message) => {
+    showSpinner.value = true;
+    spinnerMessage.value = message;
+  }
+
+  const hideSpinner = () => {
+    showSpinner.value = false;
+    spinnerMessage.value = '';
+  }
   
   const openEditRecipeModal = () => {
     isEditRecipeModelVisible.value = true;
@@ -443,13 +460,14 @@
       body.fieldsToUpdate = ['name', 'note', 'ingredients', 'tags'];
     }
 
+    showSpinnerWithMessage('Saving recipe...');
     return fetch('/api/recipe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
-    })
+    }).finally(hideSpinner);
   }
 
   const saveRecipe = async () => {
@@ -493,13 +511,14 @@
   }
   
   const saveMealplanApi = async (mealplanId, name, ingredients, recipes) => {
+    showSpinnerWithMessage('Saving mealplan...');
     return fetch('/api/mealplan', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ id: mealplanId, name: name, ingredients: ingredients, recipes: recipes })
-    })
+    }).finally(hideSpinner);
   }
   
   const saveMealplan = async () => {
@@ -551,8 +570,9 @@
     }, ms);
   }
   
-  const copyMealplan = (mealplanId) => {
-    fetch(`/api/mealplan?id=${mealplanId}`, {
+  const copyMealplan = async (mealplanId) => {
+    showSpinnerWithMessage('Copying mealplan...');
+    return fetch(`/api/mealplan?id=${mealplanId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -581,11 +601,14 @@
           console.log('Could not copy mealplan');
         }
       }
+    ).finally(
+      hideSpinner
     );
   }
   
-  const copyRecipe = (recipeId) => {
-    fetch(`/api/recipe?id=${recipeId}`, {
+  const copyRecipe = async (recipeId) => {
+    showSpinnerWithMessage('Copying recipe...');
+    return fetch(`/api/recipe?id=${recipeId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -609,45 +632,56 @@
           console.log('Could not copy recipe.');
         }
       }
+    ).finally(
+      hideSpinner
     );
   }
 
   const deleteRecipe = async (recipeId) => {
-    const resp = await fetch(`/api/recipe?id=${recipeId}`, {
+    showSpinnerWithMessage('Deleting recipe...');
+    return fetch(`/api/recipe?id=${recipeId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
       },
-    })
-    if (resp.ok) {
-      refresh_recipes();
-      resetEditRecipe();
-      setMessageWithTimer(editRecipeModalMessage, 'Recipe deleted!');
-    } else {
-      console.log('Could not delete recipe');
-      setMessageWithTimer(editRecipeModalMessage, 'Could not delete recipe');
-    }
+    }).then(res => {
+      if (res.ok) {
+        refresh_recipes();
+        resetEditRecipe();
+        setMessageWithTimer(editRecipeModalMessage, 'Recipe deleted!');
+      } else {
+        console.log('Could not delete recipe');
+        setMessageWithTimer(editRecipeModalMessage, 'Could not delete recipe');
+      }
+    }).finally(
+      hideSpinner
+    );
   }
   
   const deleteMealplan = async (mealplanId) => {
-    const resp = await fetch(`/api/mealplan?id=${mealplanId}`, {
+    showSpinnerWithMessage('Deleting mealplan...');
+    return fetch(`/api/mealplan?id=${mealplanId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
       },
-    })
-    if (resp.ok) {
-      refresh_mealplans();
-      resetEditMealplan();
-      setMessageWithTimer(editMealplanMessage, 'Mealplan deleted!');
-    } else {
-      setMessageWithTimer(editMealplanMessage, 'Could not delete mealplan');
-      console.log('Could not delete mealplan');
-    }
+    }).then(res => {
+      if (res.ok) {
+        refresh_mealplans();
+        resetEditMealplan();
+        setMessageWithTimer(editMealplanMessage, 'Mealplan deleted!');
+      } else {
+        setMessageWithTimer(editMealplanMessage, 'Could not delete mealplan');
+        console.log('Could not delete mealplan');
+      }
+    }).finally(
+      hideSpinner
+    );
   }
 
   const sendAsEmail = async (mealplanId) => {
-    await fetch(`/api/internal/email?mealplanId=${mealplanId}`, {
+    showSpinnerWithMessage('Sending mealplan...');
+    return fetch(`/api/internal/email?mealplanId=${mealplanId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -661,7 +695,9 @@
         console.log('Could not send mealplan as email');
         setMessageWithTimer(editMealplanMessage, 'Could not send mealplan as email');
       }
-    });
+    }).finally(
+      hideSpinner
+    );
   }
   
   </script>
