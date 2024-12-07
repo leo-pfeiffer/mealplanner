@@ -1,3 +1,5 @@
+<img src="https://github.com/leo-pfeiffer/mealplanner/blob/main/assets/img/logo.png?raw=true" width="84" height="84">
+
 # Leo and Kristina's Mealplanner
 This is a mealplanner built with Nuxt.js, Vue.js, and Tailwind CSS. It allows users to manage recipes, meal plans, and send meal plans via email.
 
