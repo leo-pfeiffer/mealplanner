@@ -1,39 +1,44 @@
 <template>
-    <div id="app" class="flex flex-col justify-between text-amber-700 font-comic-sans h-screen overflow-x-scroll">
+    <div id="app" class="flex flex-col h-screen text-amber-700 font-comic-sans overflow-x-scroll">
   
-      <div class="border border-amber-50 my-4 mx-8">
-        <div class="px-2 py-2 bg-white border border-amber-200 rounded-lg shadow">
-          <div class="flex flex-wrap py-2">
-            <div class="py-1 px-4">
+      <div class="p-4 md:w-58 md:h-30 md:sticky md:top-0">
+        <div class="px-2 py-2 md:h-30 bg-white border border-amber-200 rounded-lg shadow">
+          <div class="flex md:flex-row py-2 justify-center items-center">
+
+            <div class="min-w-16 mx-4">
+              <img src="@/assets/img/logo.png" alt="Logo" class="w-16 h-16"/>
+            </div>
+            
+            <div class="py-5 px-2">
               <label>
-                <button @click="createEmptyMealplanForm" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                New meal plan
+                <button @click="createEmptyMealplanForm" class="w-18 md:w-36 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                New
                 </button>
               </label>
             </div>
-            <div class="py-1 px-4">
-              <button @click="loadMealplan(dropdownSelectedMealplanId)" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                Load meal plan
-              </button>
-              <select class="ml-2 py-1 px-4 border border-amber-500 rounded" v-model="dropdownSelectedMealplanId">
-                <option disabled selected value> -- select meal plan -- </option>
+
+            <div class="py-1 px-2">
+              <select class="w-40 md:w-64 py-1.5 px-4 border border-amber-500 rounded" v-model="dropdownSelectedMealplanId" @change="loadMealplan(dropdownSelectedMealplanId)">
+                <option disabled selected value> Select </option>
                 <option v-for="mealplan in mealplans" :key="mealplan.id" :value="mealplan.id" default="Fsa">{{ mealplan.name }}</option>
               </select>
             </div>
-            <div class="py-1 px-4">
-              <button @click="resetApp" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+
+            <div class="py-1 px-2 ml-auto">
+              <button @click="resetApp" class="w-18 md:w-36 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                 Reset
               </button>
             </div>
+
           </div>
         </div>
       </div>
   
-      <div class="grid three-col flex-grow justify-center items-center mb-auto">
+      <div class="flex-1 flex flex-col md:flex-row">
   
-        <div id="left-col" class="h-full px-8">
+        <div id="left-col" class="px-4 md:pb-2 flex-1 h-[2550px] md:h-full">
   
-          <div class="h-full p-6 bg-white border border-amber-200 rounded-lg shadow">
+          <div class="md:h-full p-6 bg-white border border-amber-200 rounded-lg shadow">
             <div>
 
               <p class="m-1 text-xl">Recipes</p>
@@ -55,7 +60,7 @@
                 <input type="text" v-model="recipeFilter" placeholder="Search by name or tag" class="w-80 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
             </div>
   
-            <div v-if="recipes" class="h-80 overflow-x-scroll border border-amber-300 my-2 p-2">
+            <div v-if="recipes" class="overflow-x-scroll border border-amber-300 my-2 p-2">
                 <div v-for="recipe in getFilteredRecipes()" :key="recipe.id">
                   <label class="inline-flex items-center">
                     <input type="checkbox" :value="recipe" v-model="selectedRecipes" class="form-checkbox">
@@ -66,16 +71,16 @@
             </div>
         </div>
   
-        <div id="middle-col" class="flex justify-center items-center">
+        <div id="middle-col" class="md:pb-2 flex justify-center items-center">
   
           <!-- Add button -->
-          <button @click="addSelectedToMealplan" class="block add-button bg-white hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded">
+          <button @click="addSelectedToMealplan" class="block add-button bg-white hover:bg-amber-500 text-amber-700 font-semibold hover:text-white border border-amber-500 hover:border-transparent rounded-full">
             >
           </button>
   
         </div>
   
-        <div id="right-col" class="h-full px-8">
+        <div id="right-col" class="px-4 md:pb-2 flex-1 h-full">
   
           <!-- Add button -->
           <div class="block p-6 bg-white border border-amber-200 rounded-lg shadow h-full">
@@ -147,12 +152,6 @@
           </div>
         </div>
   
-      </div>
-  
-      <div class="border border-amber-50 mx-8 my-4">
-        <!-- <footer class="px-6 py-2 bg-white border border-amber-200 rounded-lg shadow">
-          This is a footer
-        </footer> -->
       </div>
 
       <Modal :show="isEditRecipeModelVisible" @close="isEditRecipeModelVisible = false">
@@ -703,9 +702,9 @@
   </script>
   <style>
   .three-col {
-    grid-template-columns: 1fr fit-content(40px) 1fr;
+    grid-template-columns: 1fr fit-content(10px) 1fr;
   }
-  
+
   .add-button {
     padding-top: 20px;
     padding-bottom: 20px;
@@ -713,7 +712,7 @@
     padding-right: 4px;
   }
   
-  @media only screen and (max-width: 720px) {
+  @media only screen and (max-width: 768px) {
     .three-col {
       grid-template-columns: 1fr;
     }
