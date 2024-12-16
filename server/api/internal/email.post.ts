@@ -1,6 +1,5 @@
 import { useCreds } from "~/composables/useCreds";
 import { useMailgun } from "~/composables/useMailgun";
-import { MealplanRecipeIngredient } from "~/server/dao/models";
 
 const cleanIngredientName = (name: string): string => {
   // 1. Lower case
