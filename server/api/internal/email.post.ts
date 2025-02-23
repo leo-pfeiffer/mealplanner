@@ -1,5 +1,6 @@
 import { useCreds } from "~/composables/useCreds";
 import { useMailgun } from "~/composables/useMailgun";
+import { useGemini } from "~/composables/useGemini";
 
 const cleanIngredientName = (name: string): string => {
   // 1. Lower case
@@ -87,12 +88,23 @@ export default defineEventHandler(async (event) => {
     }
     mealplanHtml += "</ul><b>";
 
-    mealplanHtml += "<h2><b>Shopping list:</b></h3>";
-    mealplanHtml += "<ul>";
-    for (const [ingredient, count] of groupedIngredients(allIngredients)) {
-      mealplanHtml += `<li>${count}x ${ingredient}</li>`;
+
+    try {
+      // Classify the ingredients
+      const geminiList = await useGemini().classify(allIngredients);
+      mealplanHtml += "<h3><b>Classified shopping list:</b></h3>";
+      mealplanHtml += geminiList;
+    } catch (error) {
+      console.error(error);
+
+      // Fallback to unclassified list
+      mealplanHtml += "<h2><b>Shopping list:</b></h3>";
+      mealplanHtml += "<ul>";
+      for (const [ingredient, count] of groupedIngredients(allIngredients)) {
+        mealplanHtml += `<li>${count}x ${ingredient}</li>`;
+      }
+      mealplanHtml += "</ul>";
     }
-    mealplanHtml += "</ul>";
 
     await useMailgun().send(mealplanHtml);
     return { status: 200, body: {message: 'Email sent'} };

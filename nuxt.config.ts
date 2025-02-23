@@ -14,6 +14,7 @@ export default defineNuxtConfig({
         appUser: process.env.APP_USER,
         appPassword: process.env.APP_PASSWORD,
         appURL: process.env.APP_URL,
+        geminiAPIKey: process.env.GEMINI_API_KEY,
         mailjetAPIKey: process.env.MAILJET_API_KEY,
         mailjetSecretKey: process.env.MAILJET_SECRET_KEY,
         mailjetUrl: process.env.MAILJET_URL,
