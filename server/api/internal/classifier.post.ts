@@ -44,25 +44,30 @@ function tokenizeInput(texts: string[], tokenizerConfig: any) {
 
 export default defineEventHandler(async (event) => {
     const model = await tf.loadLayersModel('http://localhost:3000/tfjs_model/model.json');
+    const body = await readBody(event);
+    const words: string[] = body.words;
     const query = getQuery(event);
     const word = query.word;
     console.log("Word:", word);
-    if (word) {
+    if (words) {
       const tokenizerConfig = await loadTokenizer();
-      const tokenizedInput = tokenizeInput(["chicken", "blueberries", "ham", "pasta"], tokenizerConfig);
+      const tokenizedInput = tokenizeInput(words, tokenizerConfig);
       
       let prediction = model.predict(tokenizedInput);
       prediction = Array.isArray(prediction) ? prediction : [prediction];
 
-      console.log("Prediction:", prediction);
-
       const output = prediction
         .map(tensor => tensor.argMax(-1).dataSync())
-        .map(res => Array.from(res).map(r => encodings[r]));
+        .map(res => Array.from(res).map(r => encodings[r]))
+        .flat()
+        .map((p, i) => [words[i], p]);
       
-      return {"result": "success", "prediction": output};
+      return {"prediction": output};
     } else {
-      return {"result": "error", "message": "Missing word parameter"};
+      return createError({
+        statusCode: 404,
+        statusMessage: 'No words provided',
+      });
     }
   })
   
