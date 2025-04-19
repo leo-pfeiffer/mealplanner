@@ -51,6 +51,10 @@
                 <button v-if="selectedRecipes.length == 1" @click="openEditRecipeModal" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                   Edit
                 </button>
+
+                <button v-if="recipeFilter.length != 0 || selectedTags.length != 0" @click="clearFilters" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                  Clear filters
+                </button>
   
               </div>
             </div>
@@ -58,6 +62,13 @@
             <div class="mt-2">
                 <!-- <span class="ml-2">Search:</span> -->
                 <input type="text" v-model="recipeFilter" placeholder="Search by name or tag" class="w-80 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
+            </div>
+
+            <div class="mt-2">
+                <!-- <span class="ml-2">Search:</span> -->
+                <select v-model="selectedTags" name="tagFilter" id="tagFilter" multiple class="w-80 max-h-20 overflow-x-scroll border border-amber-200 rounded p-2">
+                  <option v-for="tag in getTagsFromRecipes()" :key="tag"> {{ tag }}</option>
+                </select>
             </div>
   
             <div v-if="recipes" class="overflow-x-scroll border border-amber-300 my-2 p-2">
@@ -265,6 +276,7 @@
 
   // recipe filter
   const recipeFilter = ref('');
+  const selectedTags = ref([]);
 
   // Info messages
   const editMealplanMessage = ref('');
@@ -363,17 +375,38 @@
     isEditRecipeModelVisible.value = true;
   }
 
+  const clearFilters = () => {
+    recipeFilter.value = '';
+    selectedTags.value = [];
+  }
+
+  const getTagsFromRecipes = () => {
+    const tags = new Set();
+    recipes.value.forEach(recipe => {
+      if (recipe.tags) {
+        recipe.tags.forEach(tag => {
+          tags.add(tag);
+        });
+      }
+    });
+    return Array.from(tags);
+  }
+
   const getFilteredRecipes = () => {
     const cleanFilter = recipeFilter.value.trim().toLowerCase();
-    if (cleanFilter == '') {
+    if (cleanFilter == '' && selectedTags.value.length == 0) {
       return recipes.value;
     }
     const filterFunc = (recipe) => {
       console.log(recipe);
-      const name = recipe.name.toLowerCase().includes(cleanFilter)
-      const tag = recipe.tags && recipe.tags.join(' ').toLowerCase().includes(cleanFilter);
-      return name || tag;
+      const nameMatchesSearch = recipe.name.toLowerCase().includes(cleanFilter)
+      const tagMatchesSearch = recipe.tags && recipe.tags.join(' ').toLowerCase().includes(cleanFilter);
+      const searchMatches = nameMatchesSearch || tagMatchesSearch;
+      // if tag filter is active, recipe must match it
+      const tagMatchesTagFilter = (selectedTags.value.length == 0) || selectedTags.value.some(tag => recipe.tags && recipe.tags.includes(tag));
+      return searchMatches && tagMatchesTagFilter;
     }
+    console.log("Hello")
     return recipes.value.filter(filterFunc);
   }
 
