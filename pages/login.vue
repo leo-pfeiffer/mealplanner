@@ -6,7 +6,10 @@
           <form @submit.prevent="login" class="flex flex-col space-y-4">
             <input type="text" v-model="username" placeholder="Username" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded"/>
             <input type="password" v-model="password" placeholder="Password" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded"/>
-            <button type="submit" class="bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded">Login</button>
+            <button type="submit" class="justify-items-center bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded">
+              <SmallSpinner v-if="loggingIn"></SmallSpinner>
+              <span v-else>Login</span>
+            </button>
           </form>
         </div>
       </div>
@@ -15,10 +18,14 @@
   
   <script setup>
   import { ref } from 'vue'
-  
+  import SmallSpinner from './components/SmallSpinner.vue';
+
   const username = ref('')
   const password = ref('')
+  const loggingIn = ref(false)
+  
   const login = async () => {
+    loggingIn.value = true
     const validLogin = await useLogin().login(username.value, password.value)
     if (validLogin) {
       username.value = ''
@@ -28,6 +35,7 @@
         alert('Invalid credentials')
         username.value = ''
         password.value = ''
+        loggingIn.value = false
     }
   }
   </script>
