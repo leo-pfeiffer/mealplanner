@@ -13,6 +13,10 @@ export const useMailgun = () => {
         throw new Error('Missing environment variables for Mailjet');
     }
 
+    const toEmails = TO_EMAIL.split(',').map(email => {
+        return {"Email": email.trim()} 
+    });
+
     const send = async (text: string) => {
         const resp = await fetch(MAILJET_URL, {
             method: 'POST',
@@ -27,11 +31,7 @@ export const useMailgun = () => {
                             "Email": FROM_EMAIL,
                             "Name": "Meal Planner"
                         },
-                        "To": [
-                            {
-                                "Email": TO_EMAIL,
-                            }
-                        ],
+                        "To": toEmails,
                         "Subject": "A meal plan has been sent to you!",
                         "HTMLPart": text
                     }
