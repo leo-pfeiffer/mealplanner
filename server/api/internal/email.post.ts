@@ -1,19 +1,8 @@
 import { useCreds } from "~/composables/useCreds";
 import { useMailgun } from "~/composables/useMailgun";
 import { useGemini } from "~/composables/useGemini";
-import { cleanIngredientName } from "./email.utils";
+import { groupedIngredients } from "./email.utils";
 
-
-const groupedIngredients = (ingredients: string[]): [string, number][] => {
-  console.log(ingredients);
-  const ingredientMap = new Map<string, number>();
-  for (const ingredient of ingredients) {
-    const cleanName = cleanIngredientName(ingredient);
-    console.log(cleanName, ingredientMap.get(cleanName));
-    ingredientMap.set(cleanName, (ingredientMap.get(cleanName) ?? 0) + 1);
-  }
-  return Array.from(ingredientMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-}
 
 
 export default defineEventHandler(async (event) => {
