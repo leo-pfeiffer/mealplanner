@@ -25,7 +25,7 @@ describe('groupedIngredients', () => {
   })
 
   it('cleans ingredient names before grouping', () => {
-    const result = groupedIngredients(['M!lk', 'milk ', 'milk??'])
+    const result = groupedIngredients(['!!Milk', 'milk ', 'milk??'])
     expect(result).toEqual([
       ['milk', 3],
     ])
