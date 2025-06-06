@@ -1,25 +1,8 @@
 import { useCreds } from "~/composables/useCreds";
 import { useMailgun } from "~/composables/useMailgun";
 import { useGemini } from "~/composables/useGemini";
+import { groupedIngredients } from "./email.utils";
 
-const cleanIngredientName = (name: string): string => {
-  // 1. Lower case
-  // 2. Replace all non-alphanumeric characters with a space
-  // 3. Remove leading and trailing spaces
-  // 4. Replace multiple spaces with a single space
-  return name.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim().replace(/\s+/g, ' ');
-}
-
-const groupedIngredients = (ingredients: string[]): [string, number][] => {
-  console.log(ingredients);
-  const ingredientMap = new Map<string, number>();
-  for (const ingredient of ingredients) {
-    const cleanName = cleanIngredientName(ingredient);
-    console.log(cleanName, ingredientMap.get(cleanName));
-    ingredientMap.set(cleanName, (ingredientMap.get(cleanName) ?? 0) + 1);
-  }
-  return Array.from(ingredientMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-}
 
 
 export default defineEventHandler(async (event) => {
