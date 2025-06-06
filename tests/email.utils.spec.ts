@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cleanIngredientName } from '../server/api/internal/email.post'
+import { cleanIngredientName } from '../server/api/internal/email.utils'
 
 describe('cleanIngredientName', () => {
   it('lowercases the name', () => {
