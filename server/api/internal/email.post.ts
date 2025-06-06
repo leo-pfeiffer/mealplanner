@@ -86,7 +86,7 @@ export default defineEventHandler(async (event) => {
       allIngredients.push(mealplanIngredient.name);
       mealplanHtml += `<li>${mealplanIngredient.name}</li>`;
     }
-    mealplanHtml += "</ul><b>";
+    mealplanHtml += "</ul>";
 
 
     try {
@@ -98,7 +98,7 @@ export default defineEventHandler(async (event) => {
       console.error(error);
 
       // Fallback to unclassified list
-      mealplanHtml += "<h2><b>Shopping list:</b></h3>";
+      mealplanHtml += "<h2><b>Shopping list:</b></h2>";
       mealplanHtml += "<ul>";
       for (const [ingredient, count] of groupedIngredients(allIngredients)) {
         mealplanHtml += `<li>${count}x ${ingredient}</li>`;
