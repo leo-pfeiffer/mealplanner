@@ -2,7 +2,7 @@ import { useCreds } from "~/composables/useCreds";
 import { useMailgun } from "~/composables/useMailgun";
 import { useGemini } from "~/composables/useGemini";
 
-const cleanIngredientName = (name: string): string => {
+export const cleanIngredientName = (name: string): string => {
   // 1. Lower case
   // 2. Replace all non-alphanumeric characters with a space
   // 3. Remove leading and trailing spaces
