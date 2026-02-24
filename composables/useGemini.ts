@@ -7,6 +7,8 @@ export const useGemini = () => {
 
     const basePrompt = "Classify this shopping list by where in the supermarket I would find the respective item.\n"
     + "Do not add or remove any items from the list. If there are duplicates in the list, add up the quantities into a single item.\n" 
+    + "You should use the following supermarket sections: Produce, Meat/Seafood, Dairy, Pantry, Baker, Frozen.\n"
+    + "If an item does not fit into any of these sections, you can add additional sections.\n"
     + "Format the output as a HTML list, but do not include any other HTML elements and return the list as plain text, i.e. without backticks.\n"
     + "Add a headline for each supermarket section, and add the items under the respective headline.\n"
     + "Here is the list: ";
