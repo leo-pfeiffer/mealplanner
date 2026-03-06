@@ -24,6 +24,12 @@
               </select>
             </div>
 
+            <div class="py-1 px-2">
+              <NuxtLink to="/meal-suggester" class="w-18 md:w-36 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                Meal Suggester
+              </NuxtLink>
+            </div>
+
             <div class="py-1 px-2 ml-auto">
               <button @click="resetApp" class="w-18 md:w-36 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                 Reset
