@@ -54,10 +54,6 @@
                   Create recipe
                 </button>
 
-                <button v-if="selectedRecipes.length == 1" @click="openEditRecipeModal" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                  Edit
-                </button>
-
                 <button v-if="recipeFilter.length != 0 || selectedTags.length != 0" @click="clearFilters" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                   Clear filters
                 </button>
@@ -78,25 +74,20 @@
             </div>
   
             <div v-if="recipes" class="overflow-x-scroll border border-amber-300 my-2 p-2">
-                <div v-for="recipe in getFilteredRecipes()" :key="recipe.id">
-                  <label class="inline-flex items-center">
-                    <input type="checkbox" :value="recipe" v-model="selectedRecipes" class="form-checkbox">
-                    <span class="ml-2">{{ recipe.name }}</span>
-                  </label>
+                <div v-for="recipe in getFilteredRecipes()" :key="recipe.id" class="flex items-center justify-between">
+                  <span class="ml-2">{{ recipe.name }}</span>
+                  <div class="flex items-center">
+                    <button @click="openViewRecipeModal(recipe)" class="ml-2 border border-amber-200 rounded px-2" title="View recipe">📝️</button>
+                    <template v-if="editMealplan.state">
+                      <button v-if="!isRecipeInMealplan(recipe)" @click="addRecipeToMealplan(recipe)" class="ml-2 border border-amber-200 rounded px-2" title="Add to mealplan">+</button>
+                      <span v-else class="ml-2 text-green-600" title="Already in mealplan">✓</span>
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>
         </div>
-  
-        <div id="middle-col" class="md:pb-2 flex justify-center items-center">
-  
-          <!-- Add button -->
-          <button @click="addSelectedToMealplan" class="block add-button bg-white hover:bg-amber-500 text-amber-700 font-semibold hover:text-white border border-amber-500 hover:border-transparent rounded-full">
-            >
-          </button>
-  
-        </div>
-  
+
         <div id="right-col" class="px-4 md:pb-2 flex-1 h-full">
   
           <!-- Add button -->
@@ -118,7 +109,7 @@
                 <span class="ml-2">Recipes:</span>
                 <ul v-if="editMealplan.recipes.length > 0" class="list-disc ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2">
                   <li v-for="recipe in editMealplan.recipes" class="pb-2">
-                    {{ recipe.name }}
+                    <span @click="removeRecipeFromMealplan(recipe)" class="cursor-pointer">🗑️</span> {{ recipe.name }}
                     <ul class="list-disc ml-10">
                       <li v-if="recipe.recipe_ingredients" v-for="ingredient in recipe.recipe_ingredients" class="">
                         {{ ingredient.name }}
@@ -178,7 +169,7 @@
 
           <div class="mt-4 w-full">
             <span class="ml-2">Name:</span>
-            <input type="text" v-model="editRecipe.newName" @input="checkRecipeNameConflict" class="w-full ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
+            <input type="text" v-model="editRecipe.newName" @input="checkRecipeNameConflict" :readonly="!isRecipeModalEditable" class="w-full ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"/>
             <span class="ml-4 text-red-500" v-if="editRecipeModalNewNameMessage"> {{ editRecipeModalNewNameMessage }}</span>
           </div>
 
@@ -186,14 +177,14 @@
             <div class="mt-4 w-full">
               <span class="ml-2">Ingredients:</span>
               <ul class="list-disc ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2">
-                <li>
+                <li v-if="isRecipeModalEditable">
                   <input type="text" v-model="editRecipe.newIngredient" @keyup.enter="addNewIngredientToRecipe" class="max-h-60 overflow-x-scroll border border-amber-200 rounded"/>
                   <button @click="addNewIngredientToRecipe" class="ml-1 border border-amber-200 rounded px-4">
                     +
                   </button>
                 </li>
                 <li v-for="ingredient in editRecipe.ingredients">
-                  <span @click="removeIngredientFromRecipe(ingredient)" class="cursor-pointer">🗑️</span> {{ ingredient }}
+                  <span v-if="isRecipeModalEditable" @click="removeIngredientFromRecipe(ingredient)" class="cursor-pointer">🗑️</span> {{ ingredient }}
                 </li>
               </ul>
             </div>
@@ -201,20 +192,20 @@
             <div class="mt-4 w-full">
               <div>
                 <span class="ml-2">Note:</span>
-                <textarea v-model="editRecipe.note" class="w-full ml-4 min-h-20 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"></textarea>
+                <textarea v-model="editRecipe.note" :readonly="!isRecipeModalEditable" class="w-full ml-4 min-h-20 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2"></textarea>
               </div>
 
               <div class="mt-4">
               <span class="ml-2">Tags:</span>
               <ul class="list-disc ml-4 max-h-40 overflow-x-scroll border border-amber-200 rounded p-2">
-                <li>
+                <li v-if="isRecipeModalEditable">
                   <input type="text" v-model="editRecipe.newTag" @keyup.enter="addNewTagToRecipe" class="max-h-60 overflow-x-scroll border border-amber-200 rounded"/>
                   <button @click="addNewTagToRecipe" class="ml-1 border border-amber-200 rounded px-4">
                     +
                   </button>
                 </li>
                 <li v-for="tag in editRecipe.tags">
-                  <span @click="removeTagFromRecipe(tag)" class="cursor-pointer">🗑️</span> {{ tag }}
+                  <span v-if="isRecipeModalEditable" @click="removeTagFromRecipe(tag)" class="cursor-pointer">🗑️</span> {{ tag }}
                 </li>
               </ul>
             </div>
@@ -226,7 +217,10 @@
           </div>
 
           <div class="mt-4">
-            <button @click="saveRecipe" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+            <button @click="enableRecipeEditing" v-if="!isRecipeModalEditable" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+              Edit
+            </button>
+            <button @click="saveRecipe" v-if="isRecipeModalEditable" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
               Save
             </button>
             <button @click="copyRecipe(editRecipe.recipeId)" class="mx-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
@@ -268,11 +262,9 @@
   const fetchMealplans = await useFetch('/api/mealplan');
   
   const recipes = ref(fetchRecipe.data);
-  const selectedRecipes = ref([]);
-  
+
   const refresh_recipes = () => {
     fetchRecipe.refresh();
-    selectedRecipes.value = [];
   };
   
   const mealplans = ref(fetchMealplans.data);
@@ -291,6 +283,7 @@
 
   // Modal visibility
   const isEditRecipeModelVisible = ref(false);
+  const isRecipeModalEditable = ref(false);
   
   // Edit mealplan form
   const editMealplan = ref({
@@ -329,18 +322,17 @@
     spinnerMessage.value = '';
   }
   
-  const openEditRecipeModal = () => {
+  const openViewRecipeModal = (recipe) => {
     isEditRecipeModelVisible.value = true;
+    isRecipeModalEditable.value = false;
 
-    // populate edit recipe form with selected recipe
-    const selected = getSingleSelectedRecipe();
-    editRecipe.value.recipeId = selected.id;
-    editRecipe.value.originalName = selected.name;
-    editRecipe.value.newName = selected.name;
-    editRecipe.value.note = selected.note;
-    editRecipe.value.ingredients = selected.recipe_ingredients.map(i => i.name);
+    editRecipe.value.recipeId = recipe.id;
+    editRecipe.value.originalName = recipe.name;
+    editRecipe.value.newName = recipe.name;
+    editRecipe.value.note = recipe.note;
+    editRecipe.value.ingredients = recipe.recipe_ingredients.map(i => i.name);
     editRecipe.value.newIngredient = null;
-    editRecipe.value.tags = selected.tags || [];
+    editRecipe.value.tags = recipe.tags || [];
     editRecipe.value.newTag = null;
     editRecipeModalNewNameMessage.value = null;
   }
@@ -368,7 +360,6 @@
   const resetApp = () => {
     resetEditMealplan();
     resetEditRecipe();
-    selectedRecipes.value = [];
   }
   
   const createEmptyMealplanForm = () => {
@@ -378,7 +369,12 @@
 
   const openCreateRecipeModal = () => {
     resetEditRecipe();
+    isRecipeModalEditable.value = true;
     isEditRecipeModelVisible.value = true;
+  }
+
+  const enableRecipeEditing = () => {
+    isRecipeModalEditable.value = true;
   }
 
   const clearFilters = () => {
@@ -414,10 +410,6 @@
     }
     console.log("Hello")
     return recipes.value.filter(filterFunc);
-  }
-
-  const getSingleSelectedRecipe = () => {
-    return selectedRecipes.value.length == 1 ? selectedRecipes.value[0] : null;
   }
 
   const updateMealplanNameInput = () => {
@@ -480,8 +472,18 @@
     return string.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   }
   
-  const addSelectedToMealplan = () => {
-    editMealplan.value.recipes = [...selectedRecipes.value.sort((a, b) => a.name.localeCompare(b.name))];
+  const isRecipeInMealplan = (recipe) => {
+    return editMealplan.value.recipes.some(r => r.name === recipe.name);
+  }
+
+  const addRecipeToMealplan = (recipe) => {
+    if (isRecipeInMealplan(recipe)) return;
+    editMealplan.value.recipes = [...editMealplan.value.recipes, recipe].sort((a, b) => a.name.localeCompare(b.name));
+    editMealplan.value.state = MealplanState.UPDATED;
+  }
+
+  const removeRecipeFromMealplan = (recipe) => {
+    editMealplan.value.recipes = editMealplan.value.recipes.filter(r => r.name !== recipe.name);
     editMealplan.value.state = MealplanState.UPDATED;
   }
   
@@ -524,7 +526,6 @@
       setMessageWithTimer(editRecipeModalMessage, 'Recipe saved!', 10000);
       resetEditRecipe();
       refresh_recipes();
-      selectedRecipes.value = [];
     } else {
       setMessageWithTimer(editRecipeModalMessage, 'Could not save recipe');
     }
@@ -744,23 +745,9 @@
     grid-template-columns: 1fr fit-content(10px) 1fr;
   }
 
-  .add-button {
-    padding-top: 20px;
-    padding-bottom: 20px;
-    padding-left: 4px;
-    padding-right: 4px;
-  }
-  
   @media only screen and (max-width: 768px) {
     .three-col {
       grid-template-columns: 1fr;
-    }
-    .add-button {
-      padding-top: 20px;
-      padding-bottom: 20px;
-      padding-left: 4px;
-      padding-right: 4px;
-      transform: rotate(90deg);
     }
   }
   
