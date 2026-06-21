@@ -54,10 +54,6 @@
                   Create recipe
                 </button>
 
-                <button v-if="selectedRecipes.length == 1" @click="openEditRecipeModal" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
-                  Edit
-                </button>
-
                 <button v-if="recipeFilter.length != 0 || selectedTags.length != 0" @click="clearFilters" class=" ml-2 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                   Clear filters
                 </button>
@@ -79,14 +75,14 @@
   
             <div v-if="recipes" class="overflow-x-scroll border border-amber-300 my-2 p-2">
                 <div v-for="recipe in getFilteredRecipes()" :key="recipe.id" class="flex items-center justify-between">
-                  <label class="inline-flex items-center">
-                    <input type="checkbox" :value="recipe" v-model="selectedRecipes" class="form-checkbox">
-                    <span class="ml-2">{{ recipe.name }}</span>
-                  </label>
-                  <template v-if="editMealplan.state">
-                    <button v-if="!isRecipeInMealplan(recipe)" @click="addRecipeToMealplan(recipe)" class="ml-2 border border-amber-200 rounded px-2" title="Add to mealplan">+</button>
-                    <span v-else class="ml-2 text-green-600" title="Already in mealplan">✓</span>
-                  </template>
+                  <span class="ml-2">{{ recipe.name }}</span>
+                  <div class="flex items-center">
+                    <button @click="openEditRecipeModal(recipe)" class="ml-2 border border-amber-200 rounded px-2" title="Edit recipe">✏️</button>
+                    <template v-if="editMealplan.state">
+                      <button v-if="!isRecipeInMealplan(recipe)" @click="addRecipeToMealplan(recipe)" class="ml-2 border border-amber-200 rounded px-2" title="Add to mealplan">+</button>
+                      <span v-else class="ml-2 text-green-600" title="Already in mealplan">✓</span>
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>
@@ -263,11 +259,9 @@
   const fetchMealplans = await useFetch('/api/mealplan');
   
   const recipes = ref(fetchRecipe.data);
-  const selectedRecipes = ref([]);
-  
+
   const refresh_recipes = () => {
     fetchRecipe.refresh();
-    selectedRecipes.value = [];
   };
   
   const mealplans = ref(fetchMealplans.data);
@@ -324,18 +318,16 @@
     spinnerMessage.value = '';
   }
   
-  const openEditRecipeModal = () => {
+  const openEditRecipeModal = (recipe) => {
     isEditRecipeModelVisible.value = true;
 
-    // populate edit recipe form with selected recipe
-    const selected = getSingleSelectedRecipe();
-    editRecipe.value.recipeId = selected.id;
-    editRecipe.value.originalName = selected.name;
-    editRecipe.value.newName = selected.name;
-    editRecipe.value.note = selected.note;
-    editRecipe.value.ingredients = selected.recipe_ingredients.map(i => i.name);
+    editRecipe.value.recipeId = recipe.id;
+    editRecipe.value.originalName = recipe.name;
+    editRecipe.value.newName = recipe.name;
+    editRecipe.value.note = recipe.note;
+    editRecipe.value.ingredients = recipe.recipe_ingredients.map(i => i.name);
     editRecipe.value.newIngredient = null;
-    editRecipe.value.tags = selected.tags || [];
+    editRecipe.value.tags = recipe.tags || [];
     editRecipe.value.newTag = null;
     editRecipeModalNewNameMessage.value = null;
   }
@@ -363,7 +355,6 @@
   const resetApp = () => {
     resetEditMealplan();
     resetEditRecipe();
-    selectedRecipes.value = [];
   }
   
   const createEmptyMealplanForm = () => {
@@ -409,10 +400,6 @@
     }
     console.log("Hello")
     return recipes.value.filter(filterFunc);
-  }
-
-  const getSingleSelectedRecipe = () => {
-    return selectedRecipes.value.length == 1 ? selectedRecipes.value[0] : null;
   }
 
   const updateMealplanNameInput = () => {
@@ -529,7 +516,6 @@
       setMessageWithTimer(editRecipeModalMessage, 'Recipe saved!', 10000);
       resetEditRecipe();
       refresh_recipes();
-      selectedRecipes.value = [];
     } else {
       setMessageWithTimer(editRecipeModalMessage, 'Could not save recipe');
     }
