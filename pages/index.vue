@@ -78,25 +78,20 @@
             </div>
   
             <div v-if="recipes" class="overflow-x-scroll border border-amber-300 my-2 p-2">
-                <div v-for="recipe in getFilteredRecipes()" :key="recipe.id">
+                <div v-for="recipe in getFilteredRecipes()" :key="recipe.id" class="flex items-center justify-between">
                   <label class="inline-flex items-center">
                     <input type="checkbox" :value="recipe" v-model="selectedRecipes" class="form-checkbox">
                     <span class="ml-2">{{ recipe.name }}</span>
                   </label>
+                  <template v-if="editMealplan.state">
+                    <button v-if="!isRecipeInMealplan(recipe)" @click="addRecipeToMealplan(recipe)" class="ml-2 border border-amber-200 rounded px-2" title="Add to mealplan">+</button>
+                    <span v-else class="ml-2 text-green-600" title="Already in mealplan">✓</span>
+                  </template>
                 </div>
               </div>
             </div>
         </div>
-  
-        <div id="middle-col" class="md:pb-2 flex justify-center items-center">
-  
-          <!-- Add button -->
-          <button @click="addSelectedToMealplan" class="block add-button bg-white hover:bg-amber-500 text-amber-700 font-semibold hover:text-white border border-amber-500 hover:border-transparent rounded-full">
-            >
-          </button>
-  
-        </div>
-  
+
         <div id="right-col" class="px-4 md:pb-2 flex-1 h-full">
   
           <!-- Add button -->
@@ -118,7 +113,7 @@
                 <span class="ml-2">Recipes:</span>
                 <ul v-if="editMealplan.recipes.length > 0" class="list-disc ml-4 max-h-60 overflow-x-scroll border border-amber-200 rounded p-2">
                   <li v-for="recipe in editMealplan.recipes" class="pb-2">
-                    {{ recipe.name }}
+                    <span @click="removeRecipeFromMealplan(recipe)" class="cursor-pointer">🗑️</span> {{ recipe.name }}
                     <ul class="list-disc ml-10">
                       <li v-if="recipe.recipe_ingredients" v-for="ingredient in recipe.recipe_ingredients" class="">
                         {{ ingredient.name }}
@@ -480,8 +475,18 @@
     return string.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   }
   
-  const addSelectedToMealplan = () => {
-    editMealplan.value.recipes = [...selectedRecipes.value.sort((a, b) => a.name.localeCompare(b.name))];
+  const isRecipeInMealplan = (recipe) => {
+    return editMealplan.value.recipes.some(r => r.name === recipe.name);
+  }
+
+  const addRecipeToMealplan = (recipe) => {
+    if (isRecipeInMealplan(recipe)) return;
+    editMealplan.value.recipes = [...editMealplan.value.recipes, recipe].sort((a, b) => a.name.localeCompare(b.name));
+    editMealplan.value.state = MealplanState.UPDATED;
+  }
+
+  const removeRecipeFromMealplan = (recipe) => {
+    editMealplan.value.recipes = editMealplan.value.recipes.filter(r => r.name !== recipe.name);
     editMealplan.value.state = MealplanState.UPDATED;
   }
   
@@ -744,23 +749,9 @@
     grid-template-columns: 1fr fit-content(10px) 1fr;
   }
 
-  .add-button {
-    padding-top: 20px;
-    padding-bottom: 20px;
-    padding-left: 4px;
-    padding-right: 4px;
-  }
-  
   @media only screen and (max-width: 768px) {
     .three-col {
       grid-template-columns: 1fr;
-    }
-    .add-button {
-      padding-top: 20px;
-      padding-bottom: 20px;
-      padding-left: 4px;
-      padding-right: 4px;
-      transform: rotate(90deg);
     }
   }
   
