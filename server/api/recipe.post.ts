@@ -1,6 +1,8 @@
 import { Recipe, RecipeIngredient, sequelize } from '../dao/models';
+import { assertOwnedByUser } from '../utils/ownership';
 
 export default defineEventHandler(async (event) => {
+    const userId = event.context.userId;
     const body = await readBody(event);
 
     const updateId = Number(body.id);
@@ -16,7 +18,7 @@ export default defineEventHandler(async (event) => {
       const t = await sequelize.transaction();
       try {
         const newRecipe = await Recipe.create(
-          { name: name, note: note, tags: tags }, 
+          { userId, name: name, note: note, tags: tags },
           { transaction: t }
         );
 
@@ -39,9 +41,9 @@ export default defineEventHandler(async (event) => {
 
     // if ID is provided, this is an update
     if (updateId) {
-      const recipe = await Recipe.findByPk(updateId);
-      
-      if (!recipe || !fieldsToUpdate || fieldsToUpdate.length === 0) {
+      await assertOwnedByUser(Recipe, updateId, userId);
+
+      if (!fieldsToUpdate || fieldsToUpdate.length === 0) {
           return { status: 400, body: {message: 'Bad request.'} };
       }
 
@@ -60,7 +62,7 @@ export default defineEventHandler(async (event) => {
           updates = { ...updates, tags: tags };
         }
         if (Object.keys(updates).length > 0) {
-          await Recipe.update(updates, { where: { id: updateId }, transaction: t });
+          await Recipe.update(updates, { where: { id: updateId, userId }, transaction: t });
         }
 
         // Create new ingredients

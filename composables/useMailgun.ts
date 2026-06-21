@@ -6,18 +6,14 @@ export const useMailgun = () => {
     const API_KEY = config.public.mailjetAPIKey;
     const SECRET_KEY = config.public.mailjetSecretKey;
     const FROM_EMAIL = `Mealplanner <${config.public.mailjetFromEmail}>`;
-    const TO_EMAIL = config.public.mailjetToEmail;
 
     // validate all config values exist
-    if (!MAILJET_URL || !API_KEY || !SECRET_KEY || !FROM_EMAIL || !TO_EMAIL) {
+    if (!MAILJET_URL || !API_KEY || !SECRET_KEY || !FROM_EMAIL) {
         throw new Error('Missing environment variables for Mailjet');
     }
 
-    const toEmails = TO_EMAIL.split(',').map(email => {
-        return {"Email": email.trim()} 
-    });
-
-    const send = async (text: string) => {
+    const send = async (text: string, toEmail: string) => {
+        const toEmails = [{ "Email": toEmail.trim() }];
         const resp = await fetch(MAILJET_URL, {
             method: 'POST',
             headers: {

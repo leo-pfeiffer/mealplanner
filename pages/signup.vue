@@ -2,20 +2,20 @@
     <div id="app" class="flex flex-col justify-center items-center text-amber-700 font-comic-sans h-screen overflow-x-scroll">
       <div class="border border-amber-50 my-4 mx-8">
         <div class="justify-items-center px-6 py-4 bg-white border border-amber-200 rounded-lg shadow">
-          <h1 class="text-2xl mb-4">Login</h1>
-          <p v-if="justRegistered" class="text-green-700 text-sm mb-2">Account created, please log in.</p>
-          <form @submit.prevent="login" class="flex flex-col space-y-4">
-            <input type="text" v-model="email" placeholder="Email" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded"/>
+          <h1 class="text-2xl mb-4">Sign up</h1>
+          <form @submit.prevent="signup" class="flex flex-col space-y-4">
+            <input type="email" v-model="email" placeholder="Email" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded"/>
             <input type="password" v-model="password" placeholder="Password" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded"/>
+            <input type="password" v-model="confirmPassword" placeholder="Confirm password" class="mx-1 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded"/>
             <p v-if="errorMessage" class="text-red-600 text-sm">{{ errorMessage }}</p>
             <button type="submit" class="justify-items-center bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-2 px-4 border border-amber-500 hover:border-transparent rounded">
-              <SmallSpinner v-if="loggingIn"></SmallSpinner>
-              <span v-else>Login</span>
+              <SmallSpinner v-if="signingUp"></SmallSpinner>
+              <span v-else>Sign up</span>
             </button>
           </form>
           <p class="mt-4 text-sm">
-            Don't have an account?
-            <NuxtLink to="/signup" class="underline hover:text-amber-500">Sign up</NuxtLink>
+            Already have an account?
+            <NuxtLink to="/login" class="underline hover:text-amber-500">Log in</NuxtLink>
           </p>
         </div>
       </div>
@@ -26,26 +26,30 @@
   import { ref } from 'vue'
   import SmallSpinner from './components/SmallSpinner.vue';
 
-  const route = useRoute()
-  const justRegistered = computed(() => route.query.registered === '1')
-
   const email = ref('')
   const password = ref('')
-  const loggingIn = ref(false)
+  const confirmPassword = ref('')
+  const signingUp = ref(false)
   const errorMessage = ref('')
 
-  const login = async () => {
-    loggingIn.value = true
+  const signup = async () => {
     errorMessage.value = ''
-    const validLogin = await useLogin().login(email.value, password.value)
-    if (validLogin) {
+
+    if (password.value !== confirmPassword.value) {
+      errorMessage.value = 'Passwords do not match'
+      return
+    }
+
+    signingUp.value = true
+    const result = await useLogin().signup(email.value, password.value)
+    if (result.success) {
       email.value = ''
       password.value = ''
-      navigateTo('/')
+      confirmPassword.value = ''
+      navigateTo('/login?registered=1')
     } else {
-        errorMessage.value = 'Invalid email or password'
-        password.value = ''
-        loggingIn.value = false
+        errorMessage.value = result.error || 'Signup failed'
+        signingUp.value = false
     }
   }
   </script>

@@ -3,6 +3,7 @@ import { Mealplan, MealplanIngredient, MealplanRecipe, sequelize } from '../dao/
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const id = Number(query.id);
-  return await Mealplan.destroy({where: {id: id}});
+  const userId = event.context.userId;
+  return await Mealplan.destroy({where: {id: id, userId}});
 })
   
