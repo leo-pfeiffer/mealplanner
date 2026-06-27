@@ -305,12 +305,6 @@ const Session = sequelize.define<Session>(
 
 User.hasMany(Session, { foreignKey: 'userId', onDelete: 'CASCADE' });
 
-Recipe.sync();
-RecipeIngredient.sync();
-Mealplan.sync();
-MealplanRecipe.sync();
-MealplanRecipeIngredient.sync();
-MealplanIngredient.sync();
 
 export {
     sequelize,
