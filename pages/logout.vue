@@ -4,7 +4,10 @@
   </template>
   
 <script setup>
- useLogin().logout()
+onMounted(async () => {
+  await useLogin().logout()
+  navigateTo('/login')
+})
 </script>
   
 <style scoped>

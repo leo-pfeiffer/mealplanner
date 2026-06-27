@@ -42,8 +42,8 @@ export const useLogin = () => {
     }
 
     const logout = async (): Promise<void> => {
-        await fetch('/api/auth/logout', { method: 'POST' })
-        navigateTo('/login')
+        const requestFetch = useRequestFetch()
+        await requestFetch('/api/auth/logout', { method: 'POST' })
     }
 
     return { login, signup, checkAuth, logout }
