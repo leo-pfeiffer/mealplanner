@@ -4,8 +4,10 @@ import { Mealplan, MealplanIngredient, MealplanRecipe, MealplanRecipeIngredient 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const id = query.id;
+  const userId = event.context.userId;
 
   const findOptions: FindOptions = {
+    where: { userId },
     include: [
       {
         model: MealplanRecipe,
@@ -30,7 +32,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (id) {
-    return await Mealplan.findByPk(Number(id), findOptions);
+    return await Mealplan.findOne({ ...findOptions, where: { ...findOptions.where, id: Number(id) } });
   }
 
   return await Mealplan.findAll(findOptions);

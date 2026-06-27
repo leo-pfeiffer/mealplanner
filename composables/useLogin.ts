@@ -1,57 +1,50 @@
 export const useLogin = () => {
 
-    const login = async (username: string, password: string) => {
-        const base64string = btoa(`${username}:${password}`);
-        const success = await fetch('/auth', {
-            method: 'GET', 
+    const login = async (email: string, password: string): Promise<boolean> => {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Basic ${base64string}`
-            }
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
         })
-        .then(res => res.json())
-        .then(data =>{
-            if (data.status !== 200) {
-                console.log("Login failed.", data.status);
-                useToken().deleteTokenCookie();
-                return false;
-            }
-            const token = data.body.token;
-            if (token) {
-                useToken().setTokenCookie(token);
-                return true;
-            } else {
-                console.log("Missing token. Login failed.", data);
-                return false;
-            }
-        })
-        return success;
+        return res.ok
     }
 
-    const checkAuthToken = async (token: string) => {
-        if (!token) {
-            return false;
+    const signup = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+        const res = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        })
+        if (res.ok) {
+            return { success: true }
         }
-        const config = useRuntimeConfig();
-        const success = await fetch(`${config.public.appURL}/auth`, {
-            method: 'GET', 
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        }).then(res => {
-            if (res.status !== 200) {
-                return false;
-            }
-            return true;
-        });
-        return success;
+        const data = await res.json().catch(() => ({}))
+        return { success: false, error: data?.statusMessage || 'Signup failed' }
     }
 
-    const logout = () => {
-        useToken().deleteTokenCookie();
-        navigateTo('/login');
+    const checkAuth = async (): Promise<boolean> => {
+        // Use Nuxt's SSR-aware fetch: plain fetch('/api/auth/me') fails during
+        // server-side rendering because relative URLs can't be resolved by
+        // Node's fetch, and it wouldn't forward the incoming request's cookie
+        // either. useRequestFetch() resolves the URL correctly in both SSR and
+        // client contexts and forwards the session cookie automatically.
+        const requestFetch = useRequestFetch()
+        try {
+            await requestFetch('/api/auth/me')
+            return true
+        } catch {
+            return false
+        }
     }
 
-    return { login, checkAuthToken, logout }
+    const logout = async (): Promise<void> => {
+        const requestFetch = useRequestFetch()
+        await requestFetch('/api/auth/logout', { method: 'POST' })
+    }
+
+    return { login, signup, checkAuth, logout }
 }

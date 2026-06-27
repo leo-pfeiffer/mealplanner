@@ -1,7 +1,8 @@
-import { useCreds } from "~/composables/useCreds";
 import { useMailgun } from "~/composables/useMailgun";
 import { useGemini } from "~/composables/useGemini";
 import { groupedIngredients } from "./email.utils";
+import { getTokenFromEvent } from "../../utils/session";
+import { User } from "../../dao/models";
 
 
 
@@ -15,21 +16,17 @@ export default defineEventHandler(async (event) => {
     }
 
     // pass on token
-    const cookieHeader = getHeader(event, 'Cookie');
-    const authHeaders = getHeader(event, 'Authorization');
-    let token;
+    const token = getTokenFromEvent(event);
 
-    // use auth header first if present
-    if (authHeaders) {
-      token = useCreds().getTokenFromHeaderString(authHeaders);
-    }
-    else if (cookieHeader) {
-      token = useCreds().getTokenFromCookieString(cookieHeader);
-    }
-    
     if (!token) {
       throw createError({statusCode: 401, statusMessage: 'Unauthorized'});
     }
+
+    const user = await User.findByPk(event.context.userId);
+    if (!user) {
+      throw createError({statusCode: 401, statusMessage: 'Unauthorized'});
+    }
+
     const config = useRuntimeConfig();
     const mealplan = await fetch(
       `${config.public.appURL}/api/mealplan?id=${query.mealplanId}`,
@@ -96,7 +93,7 @@ export default defineEventHandler(async (event) => {
       mealplanHtml += "</ul>";
     }
 
-    await useMailgun().send(mealplanHtml);
+    await useMailgun().send(mealplanHtml, user.notificationEmail ?? user.email);
     return { status: 200, body: {message: 'Email sent'} };
   }    
 )

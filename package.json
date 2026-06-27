@@ -9,24 +9,29 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "server": "node server.js",
-    "test": "vitest run"
+    "test": "node --env-file=.env ./node_modules/.bin/vitest run",
+    "migrate": "tsx --env-file=.env server/migrations/run.ts"
   },
   "dependencies": {
     "@types/sequelize": "^4.28.20",
+    "bcrypt": "^6.0.0",
     "crypto": "^1.0.1",
     "express": "^4.21.1",
     "nuxt": "^3.14.159",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.5",
-"vue": "latest",
+    "umzug": "^3.8.3",
+    "vue": "latest",
     "vue-router": "latest"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/pg": "^8.11.10",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
+    "tsx": "^4.22.4",
     "vitest": "^1.5.0"
   }
 }

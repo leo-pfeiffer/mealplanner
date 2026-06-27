@@ -37,23 +37,27 @@ tryConnection();
 
 interface Recipe extends Model<InferAttributes<Recipe>, InferCreationAttributes<Recipe>> {
     id: CreationOptional<number>;
+    userId: number;
     name: string;
     note: string;
     tags: string[];
   }
 
 const Recipe = sequelize.define<Recipe>(
-    'recipe', 
+    'recipe',
     {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
         },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
         },
         note: {
             type: DataTypes.STRING,
@@ -103,6 +107,7 @@ RecipeIngredient.hasMany(Recipe, { foreignKey: 'ingredientId', onDelete: 'CASCAD
 
 interface Mealplan extends Model<InferAttributes<Mealplan>, InferCreationAttributes<Mealplan>> {
     id: CreationOptional<number>;
+    userId: number;
     name: string;
   }
 
@@ -114,10 +119,13 @@ const Mealplan = sequelize.define<Mealplan>(
             autoIncrement: true,
             primaryKey: true,
         },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
         },
     },
 );
@@ -225,14 +233,87 @@ MealplanRecipe.hasMany(MealplanRecipeIngredient, { foreignKey: 'mealplanRecipeId
 
 Mealplan.hasMany(MealplanIngredient, { foreignKey: 'mealplanId', onDelete: 'CASCADE' });
 
-sequelize.sync();
+// USER
 
-export { 
-    sequelize, 
-    Recipe, 
-    RecipeIngredient, 
-    Mealplan, 
-    MealplanRecipe, 
-    MealplanRecipeIngredient, 
-    MealplanIngredient 
+interface User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+    id: CreationOptional<number>;
+    email: string;
+    passwordHash: string;
+    notificationEmail: CreationOptional<string | null>;
+  }
+
+const User = sequelize.define<User>(
+    'user',
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        email: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true,
+        },
+        passwordHash: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        notificationEmail: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+    },
+);
+
+// SESSION
+
+interface Session extends Model<InferAttributes<Session>, InferCreationAttributes<Session>> {
+    id: CreationOptional<number>;
+    tokenHash: string;
+    userId: number;
+    expiresAt: Date;
+  }
+
+const Session = sequelize.define<Session>(
+    'session',
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        tokenHash: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true,
+        },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: User,
+                key: 'id',
+            }
+        },
+        expiresAt: {
+            type: DataTypes.DATE,
+            allowNull: false,
+        },
+    },
+);
+
+User.hasMany(Session, { foreignKey: 'userId', onDelete: 'CASCADE' });
+
+
+export {
+    sequelize,
+    Recipe,
+    RecipeIngredient,
+    Mealplan,
+    MealplanRecipe,
+    MealplanRecipeIngredient,
+    MealplanIngredient,
+    User,
+    Session
 };

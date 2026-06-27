@@ -1,7 +1,9 @@
 import { sequelize, Mealplan, MealplanIngredient, MealplanRecipe, MealplanRecipeIngredient } from '../dao/models';
+import { assertOwnedByUser } from '../utils/ownership';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
+  const userId = event.context.userId;
 
   const id = body.id;
   const name = body.name;
@@ -10,10 +12,16 @@ export default defineEventHandler(async (event) => {
 
   if (!recipes && !ingredients) {
     // update only name
+    await assertOwnedByUser(Mealplan, Number(id), userId);
     return await Mealplan.update(
-      {name: String(body.name)}, 
-      {where: {id: Number(id)}}
+      {name: String(body.name)},
+      {where: {id: Number(id), userId}}
     );
+  }
+
+  let existingMealplan;
+  if (id) {
+    existingMealplan = await assertOwnedByUser(Mealplan, Number(id), userId);
   }
 
   const t = await sequelize.transaction();
@@ -22,17 +30,11 @@ export default defineEventHandler(async (event) => {
     let mealplan;
     let created;
     if (!id) {
-      [mealplan, created] = await Mealplan.findOrCreate({ where: { name: name } });
+      [mealplan, created] = await Mealplan.findOrCreate({ where: { name: name, userId } });
     } else {
-      mealplan = await Mealplan.findByPk(Number(id));
-      if (!mealplan) {
-        return createError({
-          statusCode: 400,
-          statusMessage: 'Could not create mealplan',
-        });
-      }
+      mealplan = existingMealplan!;
       if (name) {
-        await Mealplan.update({name: name}, {where: {id: Number(id)}});
+        await Mealplan.update({name: name}, {where: {id: Number(id), userId}, transaction: t});
         mealplan.name = name;  // so that update is reflected in the response, todo this is ugly
       }
     }

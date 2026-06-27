@@ -36,6 +36,12 @@
               </button>
             </div>
 
+            <div class="py-1 px-2">
+              <NuxtLink to="/logout" class="inline-block bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                Logout
+              </NuxtLink>
+            </div>
+
           </div>
         </div>
       </div>
