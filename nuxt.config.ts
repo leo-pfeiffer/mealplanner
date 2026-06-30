@@ -10,6 +10,9 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    googleClientId: process.env.GOOGLE_CLIENT_ID,
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    googleRedirectUri: process.env.GOOGLE_REDIRECT_URI,
     public: {
         appURL: process.env.APP_URL,
         geminiAPIKey: process.env.GEMINI_API_KEY,

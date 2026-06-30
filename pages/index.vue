@@ -37,6 +37,12 @@
             </div>
 
             <div class="py-1 px-2">
+              <NuxtLink to="/settings" class="inline-block bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
+                Settings
+              </NuxtLink>
+            </div>
+
+            <div class="py-1 px-2">
               <NuxtLink to="/logout" class="inline-block bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded">
                 Logout
               </NuxtLink>
@@ -153,11 +159,15 @@
               @click="deleteMealplan(editMealplan.mealplanId)" v-if="editMealplan.mealplanId" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent hover:cursor-pointer rounded">
                 Delete
               </button>
-              <button 
+              <button
               @click="sendAsEmail(editMealplan.mealplanId)" v-if="editMealplan.state === MealplanState.SAVED" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded hover:cursor-pointer">
               ✉️ Send as e-mail
               </button>
-  
+              <button
+              @click="sendToGoogleTasks(editMealplan.mealplanId)" v-if="editMealplan.state === MealplanState.SAVED && googleConnected" class="ml-4 mt-4 bg-transparent hover:bg-amber-500 text-amber-700 font-semibold hover:text-white py-1 px-4 border border-amber-500 hover:border-transparent rounded hover:cursor-pointer">
+              ✅ Send to Google Tasks
+              </button>
+
             </div>
 
             <div class="mt-4" v-if="editMealplanMessage != ''">
@@ -249,13 +259,25 @@
   
 </template>
     
-<script setup>  
-  import { ref } from 'vue';
+<script setup>
+  import { ref, onMounted } from 'vue';
   import Modal from './components/Modal.vue';
   import Spinner from './components/Spinner.vue';
 
   definePageMeta({
     middleware: 'auth'
+  });
+
+  const { status: googleStatus, send: googleTasksSend } = useGoogleTasks();
+  const googleConnected = ref(false);
+
+  onMounted(async () => {
+    try {
+      const { connected } = await googleStatus();
+      googleConnected.value = connected;
+    } catch {
+      // Non-fatal: button simply won't show if status check fails
+    }
   });
 
   const MealplanState = {
@@ -744,7 +766,19 @@
       hideSpinner
     );
   }
-  
+
+  const sendToGoogleTasks = async (mealplanId) => {
+    showSpinnerWithMessage('Sending to Google Tasks...');
+    try {
+      await googleTasksSend(mealplanId);
+      setMessageWithTimer(editMealplanMessage, 'Mealplan sent to Google Tasks!');
+    } catch {
+      setMessageWithTimer(editMealplanMessage, 'Could not send to Google Tasks');
+    } finally {
+      hideSpinner();
+    }
+  }
+
   </script>
   <style>
   .three-col {
