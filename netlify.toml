@@ -1,0 +1,6 @@
+[build.environment]
+  # These Nuxt private runtimeConfig values are resolved from process.env at build time and
+  # serialized as defaults into the compiled Nitro server bundle (overridden by the real env
+  # vars at runtime). Netlify's secrets scanner flags the literal values present in that
+  # bundle; omit them here since the build environment is not publicly accessible.
+  SECRETS_SCAN_OMIT_KEYS = "GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_REDIRECT_URI"
