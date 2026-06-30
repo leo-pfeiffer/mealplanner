@@ -1,40 +1,9 @@
 import { google } from 'googleapis';
 import { useGemini } from '~/composables/useGemini';
 import { groupedIngredients } from './email.utils';
+import { buildClassifyPrompt, buildRepairPrompt, parseClassifiedIngredients, buildTasklistTitle } from './google-tasks.utils';
 import { getTokenFromEvent } from '../../utils/session';
 import { getAuthenticatedClient } from '../../utils/googleAuth';
-
-function buildPlainTextContent(mealplan: any, classifiedList: string | null, allIngredients: string[]): string {
-    let text = `=== ${mealplan.name} ===\n\n`;
-
-    text += `Recipes:\n`;
-    for (const mealplanRecipe of mealplan.mealplan_recipes) {
-        text += `${mealplanRecipe.name}\n`;
-        for (const ingredient of mealplanRecipe.recipe_ingredients) {
-            text += `  - ${ingredient.name}\n`;
-        }
-        text += '\n';
-    }
-
-    if (mealplan.mealplan_ingredients.length > 0) {
-        text += `Extra ingredients:\n`;
-        for (const ingredient of mealplan.mealplan_ingredients) {
-            text += `  - ${ingredient.name}\n`;
-        }
-        text += '\n';
-    }
-
-    text += `Shopping list:\n`;
-    if (classifiedList) {
-        text += classifiedList;
-    } else {
-        for (const [ingredient, count] of groupedIngredients(allIngredients)) {
-            text += `  ${count}x ${ingredient}\n`;
-        }
-    }
-
-    return text.trimEnd();
-}
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event);
@@ -75,40 +44,50 @@ export default defineEventHandler(async (event) => {
         allIngredients.push(ingredient.name);
     }
 
-    let classifiedList: string | null = null;
+    let classified: Record<string, string[]> | null = null;
     try {
-        const classifyPrompt = 'Classify this shopping list by where in the supermarket I would find the respective item.\n'
-            + 'Do not add or remove any items from the list. If there are duplicates in the list, add up the quantities into a single item.\n'
-            + 'You should use the following supermarket sections: Produce, Meat/Seafood, Dairy, Pantry, Baker, Frozen.\n'
-            + 'If an item does not fit into any of these sections, you can add additional sections.\n'
-            + 'Format the output as plain text only — no HTML, no markdown, no backticks.\n'
-            + 'Add a section header on its own line followed by the items indented with "  - ".\n'
-            + 'Here is the list: ' + allIngredients.join(', ');
-        classifiedList = await useGemini().generate(classifyPrompt);
+        const primary = await useGemini().generate(buildClassifyPrompt(allIngredients), { responseMimeType: 'application/json' });
+        classified = parseClassifiedIngredients(primary);
+        if (!classified) {
+            const repaired = await useGemini().generate(buildRepairPrompt(primary), { responseMimeType: 'application/json' });
+            classified = parseClassifiedIngredients(repaired);
+        }
     } catch (error) {
         console.error('Gemini classification failed, using fallback:', error);
+        classified = null;
     }
-
-    const notes = buildPlainTextContent(mealplan, classifiedList, allIngredients);
 
     const authClient = await getAuthenticatedClient(userId);
     const tasks = google.tasks({ version: 'v1', auth: authClient });
 
-    const existingTasks = await tasks.tasks.list({ tasklist: '@default', showDeleted: false });
-    const match = existingTasks.data.items?.find(t => t.title === mealplan.name);
+    const title = buildTasklistTitle(mealplan.name);
+    const newList = await tasks.tasklists.insert({ requestBody: { title } });
+    const tasklistId = newList.data.id!;
 
-    if (match?.id) {
-        await tasks.tasks.update({
-            tasklist: '@default',
-            task: match.id,
-            requestBody: { id: match.id, title: mealplan.name, notes },
-        });
+    // Display order isn't required, so aisle tasks and their ingredient subtasks are inserted
+    // concurrently rather than chained via `previous` — this is the main latency cost otherwise.
+    if (classified) {
+        await Promise.all(Object.entries(classified).map(async ([aisle, items]) => {
+            const aisleTask = await tasks.tasks.insert({
+                tasklist: tasklistId,
+                requestBody: { title: aisle },
+            });
+            await Promise.all(items.map(item =>
+                tasks.tasks.insert({
+                    tasklist: tasklistId,
+                    parent: aisleTask.data.id!,
+                    requestBody: { title: item },
+                })
+            ));
+        }));
     } else {
-        await tasks.tasks.insert({
-            tasklist: '@default',
-            requestBody: { title: mealplan.name, notes },
-        });
+        await Promise.all(groupedIngredients(allIngredients).map(([ingredient, count]) =>
+            tasks.tasks.insert({
+                tasklist: tasklistId,
+                requestBody: { title: `${count}x ${ingredient}` },
+            })
+        ));
     }
 
-    return { status: 200, body: { message: 'Task created in Google Tasks' } };
+    return { status: 200, body: { message: 'Tasklist created in Google Tasks', tasklistId, title } };
 });
