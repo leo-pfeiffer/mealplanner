@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { generateWithFallback, isTransientStatus, extractText, type GeminiCallResult } from '../composables/useGemini.utils'
 
 const ok = (text: string): GeminiCallResult => ({
@@ -23,6 +23,40 @@ describe('generateWithFallback', () => {
 
     expect(result).toEqual({ ok: true, text: 'hello' })
     expect(calls).toEqual(['A'])
+  })
+
+  it('logs which model was used on success, without warning about fallback', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await generateWithFallback({
+      models: ['A', 'B'],
+      callModel: async () => ok('hello'),
+      retryDelayMs: 0,
+    })
+
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('primary model "A"'))
+    expect(warnSpy).not.toHaveBeenCalled()
+
+    logSpy.mockRestore()
+    warnSpy.mockRestore()
+  })
+
+  it('logs a fallback warning and identifies the fallback model on success', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await generateWithFallback({
+      models: ['A', 'B'],
+      callModel: async (model) => (model === 'A' ? fail(429) : ok('hello')),
+      retryDelayMs: 0,
+    })
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('falling back to "B"'))
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('fallback model "B"'))
+
+    logSpy.mockRestore()
+    warnSpy.mockRestore()
   })
 
   it('retries the same model on a transient error before falling back', async () => {
