@@ -306,6 +306,59 @@ const Session = sequelize.define<Session>(
 User.hasMany(Session, { foreignKey: 'userId', onDelete: 'CASCADE' });
 
 
+// GOOGLE OAUTH TOKEN
+
+interface GoogleOAuthToken extends Model<InferAttributes<GoogleOAuthToken>, InferCreationAttributes<GoogleOAuthToken>> {
+    id: CreationOptional<number>;
+    userId: number;
+    accessToken: string;
+    refreshToken: CreationOptional<string | null>;
+    scope: CreationOptional<string | null>;
+    expiresAt: CreationOptional<Date | null>;
+}
+
+const GoogleOAuthToken = sequelize.define<GoogleOAuthToken>(
+    'google_oauth_token',
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        userId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            unique: true,
+            references: {
+                model: User,
+                key: 'id',
+            },
+            onDelete: 'CASCADE',
+        },
+        accessToken: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        refreshToken: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+        },
+        scope: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        expiresAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+    },
+    { tableName: 'google_oauth_tokens' },
+);
+
+User.hasOne(GoogleOAuthToken, { foreignKey: 'userId', as: 'googleOAuthToken', onDelete: 'CASCADE' });
+GoogleOAuthToken.belongsTo(User, { foreignKey: 'userId' });
+
+
 export {
     sequelize,
     Recipe,
@@ -315,5 +368,6 @@ export {
     MealplanRecipeIngredient,
     MealplanIngredient,
     User,
-    Session
+    Session,
+    GoogleOAuthToken,
 };
