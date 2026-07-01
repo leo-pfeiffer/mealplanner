@@ -25,7 +25,7 @@ npx vitest run tests/email.utils.spec.ts
 - **`pages/`** — Vue SPA pages: `index.vue` (main app), `login.vue`, `logout.vue`
 - **`composables/`** — Client-side logic shared across pages:
   - `useCreds.ts` — SHA-256 token auth; token stored as `mealPlannerAuthToken` cookie
-  - `useGemini.ts` — Calls Gemini 2.5 Flash Lite API to categorize ingredients by supermarket section
+  - `useGemini.ts` — Calls the Gemini API (gemini-3.1-flash-lite, falling back to gemini-2.5-flash-lite on 429/503) to categorize ingredients by supermarket section
   - `useMailgun.ts` / `useMailjet.ts` — Email delivery of shopping lists
   - `useToken.ts`, `useLogin.ts` — Auth state management
 - **`server/api/`** — Nitro API endpoints: `recipe.[get|post|delete].ts`, `mealplan.[get|post|delete].ts`, `internal/email.post.ts`
@@ -55,4 +55,4 @@ SSL is automatically enabled for non-localhost PostgreSQL hosts.
 
 ### Tests
 
-Tests live in `tests/` and use Vitest. Currently covers `server/api/internal/email.utils.ts` (ingredient cleaning and grouping utilities).
+Tests live in `tests/` and use Vitest. Currently covers `server/api/internal/email.utils.ts` (ingredient cleaning and grouping utilities) and `composables/useGemini.utils.ts` (model-fallback retry logic).
